@@ -30,7 +30,11 @@ Two logs live here:
 - Status: **Open**, needed by end of week 2 (2026-10-30). Input comes from the M1-T1 availability audit.
 
 ### ADR-002 — Cloud host and object storage `[OWNER]`
-- Status: **Open**. The interim cron host is needed in week 1 for the live collector (M1-T3). The production host is needed by week 11.
+- Status: **Interim host accepted** (owner, 2026-10-15); production host **open**, needed by week 11.
+- Interim decision: the live collector runs on the owner's Mac as a LaunchAgent (`local.gridcast.collector`), hourly at :07, and **only while on AC power** (`--require-ac`, owner's request). launchd never wakes the Mac, and a run missed during sleep fires once on wake.
+- Why this is safe for the data: every run re-lists each folder and fetches anything it has not seen. Being off or on battery only delays collection. Data is lost only if the Mac is never plugged in for longer than the shortest on-site retention (~30 days for intermediate pre-dispatch, VG-forecast and generator-output versions; real-time intermediate versions are not kept anyway, see ADR-010).
+- Cost: the first run fetches ~13,000 files (~1.5 GB raw), about 3–4 h at 1 request/s. After that, ~25 MB/day raw, stored gzip-compressed.
+- Follow-up: move to GitHub Actions or a small host with object storage when the production host is chosen.
 
 ### ADR-003 — Weather API: Previous Runs vs. Single Runs, and which model `[OWNER]`
 - Status: **Open**, needed by week 2.
@@ -57,13 +61,22 @@ Two logs live here:
 - Consequences: no `hydra` CLI overrides. If sweeps get complicated in M3–M4, revisit with a superseding ADR.
 
 ### ADR-009 — Operator pre-dispatch baseline (O3) cannot be issued before our forecast `[OWNER]`
-- Status: **Proposed**. Owner decision needed before G1 (see V-07).
+- Status: **Accepted: option A** (owner, 2026-10-15). See V-07.
 - Context: O3 compares GridCast against "IESO pre-dispatch OZP projection". V-07 shows the first pre-dispatch OZP vintage for delivery day D is published about 20:19 EST on D−1. That is roughly 11 hours after our 09:00 issue time and after the day-ahead results are out. No operator price projection for D exists at issue time.
 - Options:
   - **A (recommended): keep it as an information-advantaged reference.** Compare our 09:00 D−1 forecast with the operator's *first* pre-dispatch vintage for D, clearly labelled as issued about 11 h later with DAM results known. Report it for both the DA OZP target and the RT OZP secondary target. Pre-dispatch projects real-time prices, so RT OZP is the more natural yardstick. Restate O3 accordingly.
   - **B: drop O3** and make LEAR, the strongest published EPF baseline, the headline "beat" target.
   - **C: compare both at a common later issue time** (e.g. 21:00 EST D−1) as a separate experiment. This is fair but no longer actionable for DAM bidding.
 - Consequences of A: the O3 claim becomes "beats/does not beat a later, better-informed operator projection". That is a stronger statement if it holds, and the expected result if it does not. `PREREGISTRATION.md` uses option A pending confirmation.
+
+### ADR-010 — Collector storage: SQLite manifest, gzip bronze, version policy per report
+- Status: Accepted (executor, within M1-T2/T3) · Date: 2026-10-15
+- Context: plan §7.2 sketches a single `_manifest.parquet`. The collector appends one row per file every hour, and a run can stop half-way (unplugged, network).
+- Decision:
+  - **Manifest** in `data/bronze/_manifest.sqlite` (tables `files`, `listings`, `runs`). It is transactional, so a crash loses at most the file in flight. A Parquet export for DuckDB comes with M1-T4. Idempotency key: (report, filename, listing time). Content dedupe is by sha256 of the raw bytes.
+  - **Bronze files gzip-compressed** (`<original>__<fetched_utc>.<ext>.gz`, `mtime=0`). This is lossless and deterministic, and about 10× smaller.
+  - **Version policy** (`configs/collector.yaml`): `all` for daily reports, because their versions are forecast vintages or intraday updates. `latest` for the hourly real-time reports, whose `_vN` only adds 5-minute intervals within the hour. Un-versioned period files are skipped when versioned siblings exist (V-05a).
+- Consequences: real-time partial-hour snapshots are not kept. That is no loss for research; it only matters for an intraday nowcast, which is out of scope.
 
 ---
 
@@ -122,6 +135,12 @@ Checked 2026-10-15 by the executor. "Verified" means read in a primary source (a
 
 ### V-08 — Data-quality note found in passing
 - `PUB_Demand_2025.csv` has **23 rows for 2025-05-01**, the go-live day. Triage in M1-T9.
+
+### V-09 — Survey of all collected report folders (2026-10-15)
+- Every folder follows `PUB_<Report>[_<key>][_vN].<ext>`, with key = `YYYY`, `YYYYMM`, `YYYYMMDD` or `YYYYMMDDHH`.
+- Largest folders: `RealtimeZonalEnergyPrices` (12,728 files, ~20 KB each), `Adequacy3` (5,552, ~170 KB), `RealtimeOntarioZonalPrice` (2,763). `GenOutputCapability` versions grow through the day from ~70 KB to ~900 KB.
+- `DAConstrShadowPrices` is published with a **~6-day lag** (delivery 2026-10-09 created 2026-10-15 08:01 EST) and **skips days** (no files for 09-14, 09-15, 09-17, 10-03). It cannot be an issue-time feature for D, only for D−6 and earlier. It is excluded from the daily gap check.
+- A live smoke test of the collector against this folder (28 files) stored `CreatedAt` within 1 minute of the listing time under the EST rule, consistent with V-03.
 
 ### Deferred `[VERIFY]` items (checked in the milestone that needs them)
 

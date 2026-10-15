@@ -7,7 +7,7 @@ GridCast forecasts the next day's 24 hourly **day-ahead Ontario Zonal Prices** w
 - **Research:** a pre-registered benchmark, from naive baselines through LEAR, LightGBM and deep nets to time-series foundation models, on the market redesigned on 1 May 2025.
 - **Production:** a monitored daily pipeline that publishes a timestamped forecast before the 10:00 EPT day-ahead bid window closes.
 
-> **Status:** Milestone M0 (setup and pre-registration). No results yet. Every number this README will ever show is generated from a results file in this repo.
+> **Status:** Milestone M1 (data foundation); live collector running. No results yet. Every number this README will ever show is generated from a results file in this repo.
 
 ## Pre-registration
 
@@ -38,6 +38,16 @@ make help    # every target; data/backtest/paper targets arrive in later milesto
 ```
 
 Copy `.env.example` to `.env` for local settings. `.env` is git-ignored.
+
+### Live data collector
+
+Most IESO reports stay online for only 30–90 days, so a collector snapshots them every hour and keeps every published version:
+
+```bash
+make collector-install   # macOS LaunchAgent: hourly, only while on AC power
+make gaps                # gap report for the last 7 days
+make collect             # one pass right now
+```
 
 ## Repository map
 

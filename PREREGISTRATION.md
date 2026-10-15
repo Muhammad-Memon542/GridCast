@@ -82,7 +82,7 @@ In rolling-origin backtests, a model may *train* on earlier test days (that is w
 | **RQ3** TSFMs recover faster | Let k\* be the smallest k at which a model's CRPS is at or below the naive-d−7 CRPS on the same window ("baseline accuracy"). Supported if k\*(best zero-shot TSFM) < k\*(best retrained specialist). Each model at issue date t sees only the most recent k days before t. Evaluation window: **2026-05-01 → latest available**, so every k ≤ 365 can be met with post-go-live data only. Each k is run with and without old-market history added. |
 | **RQ4a** probabilistic dispatch adds value | The 95% bootstrap CI of the daily revenue difference (best of strategies 4–6 minus strategy 3) excludes zero. "Best" is chosen on **validation**. |
 | **RQ4b** accuracy correlates loosely with revenue | Across all models fed through strategy 4, Spearman \|ρ\| between test CRPS and revenue is < 0.5. |
-| **O3** operator reference | ADR-009 option A (pending owner confirmation). Our 09:00 D−1 forecast vs. the operator's first pre-dispatch vintage for D, issued about 20:00 EST on D−1, i.e. about 11 h later with DAM results known. Reported for DA OZP and RT OZP. Supported if MAE is lower with DM p < 0.05. |
+| **O3** operator reference | ADR-009 option A. Our 09:00 D−1 forecast vs. the operator's first pre-dispatch vintage for D, issued about 20:00 EST on D−1, i.e. about 11 h later with DAM results known. Reported for DA OZP and RT OZP. Supported if MAE is lower with DM p < 0.05. |
 | **O5** decision value | The 95% bootstrap CI of the revenue difference (best probabilistic strategy minus rule of thumb, strategy 2) excludes zero. |
 
 **Primary endpoints** (no further multiplicity correction): (1) test CRPS of DA OZP for the RQ2 comparisons; (2) the O5 revenue difference. Everything else is secondary.
@@ -109,7 +109,9 @@ All pre-registered analyses are reported whatever the result, including null and
 
 ## 11. Amendments (before the first test-window model run)
 
-_None yet._ Each amendment is dated, gives its reason, and is committed before any model touches test data.
+Each amendment is dated, gives its reason, and is committed before any model touches test data.
+
+- **2026-10-15, O3.** The owner confirmed ADR-009 option A, so "(pending owner confirmation)" was removed from the O3 row. The definition is unchanged.
 
 ## 12. Deviations (after the first test-window model run)
 

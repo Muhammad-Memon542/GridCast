@@ -16,7 +16,7 @@ One row per dataset in plan §6. Earliest-available dates and the ADR-001 recomm
 | D08 | Wind/solar forecast | `…/VGForecastSummary/` | XML | ~30 days | IESO | M1-T1 |
 | D09 | Intertie flows | `…/IntertieScheduleFlow/`, `…/IntertieScheduleFlowYear/` | XML / yearly CSV | Yearly CSV from 2018 | IESO | M1-T1 |
 | D10 | Virtual zonal prices | `…/DAHourlyZonal/`, `…/RealtimeZonalEnergyPrices/` | XML | ~90 days | IESO | M1-T1 |
-| D11 | DA shadow prices | `…/DAConstrShadowPrices/` | XML | ~90 days | IESO | M1-T1 |
+| D11 | DA shadow prices | `…/DAConstrShadowPrices/` | XML; published **~6 days after** delivery and skips some days (V-09) | ~40 days | IESO | Collecting |
 | D12 | Weather forecasts | Open-Meteo Previous Runs API | JSON | Most models from Jan 2024 | Free for non-commercial use | ADR-003 |
 | D13 | Weather actuals | Open-Meteo ERA5 archive | JSON | 1940 → | Free for non-commercial use | Analysis only |
 | D14 | Holidays | `holidays` Python package (Ontario) | Python | n/a | MIT | M1 |
@@ -29,3 +29,7 @@ One row per dataset in plan §6. Earliest-available dates and the ADR-001 recomm
 - At most 1 request per second per host (`GRIDCAST_HTTP_MIN_INTERVAL_S` ≥ 1.0 is enforced in config).
 - Exponential backoff with retries. The IESO server occasionally resets connections (V-05h).
 - Raw files are cached in bronze and keyed by sha256. Unchanged files are never re-downloaded.
+
+## Live collector
+
+`configs/collector.yaml` lists the reports collected live, scarcest history first. The collector runs hourly from a LaunchAgent on the owner's Mac while it is on AC power (ADR-002). It stores files gzip-compressed under `data/bronze/ieso/<Report>/<date>/` and logs every observation in `data/bronze/_manifest.sqlite` (ADR-010). Commands: `make collect` runs a pass now, `make gaps` shows the gap report, and `make collector-install` / `make collector-uninstall` manage the agent.
