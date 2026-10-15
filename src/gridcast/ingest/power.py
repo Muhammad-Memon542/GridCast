@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import platform
 import subprocess
-import sys
 
 
 def parse_pmset(output: str) -> bool:
@@ -18,7 +18,9 @@ def on_ac_power() -> bool:
     If ``pmset`` cannot be run on a Mac we report battery, so the collector errs
     towards not running rather than draining the battery.
     """
-    if sys.platform != "darwin":
+    # platform.system() rather than sys.platform: mypy narrows sys.platform per OS and
+    # would flag the macOS branch as unreachable when type-checking on Linux CI.
+    if platform.system() != "Darwin":
         return True
     try:
         result = subprocess.run(

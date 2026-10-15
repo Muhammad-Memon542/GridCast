@@ -29,12 +29,12 @@ def test_parse_pmset(output: str, expected: bool) -> None:
 
 
 def test_non_mac_counts_as_mains(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(power.sys, "platform", "linux")
+    monkeypatch.setattr(power.platform, "system", lambda: "Linux")
     assert power.on_ac_power() is True
 
 
 def test_mac_reads_pmset(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(power.sys, "platform", "darwin")
+    monkeypatch.setattr(power.platform, "system", lambda: "Darwin")
     monkeypatch.setattr(
         power.subprocess,
         "run",
@@ -47,7 +47,7 @@ def test_mac_without_pmset_assumes_battery(monkeypatch: pytest.MonkeyPatch) -> N
     def boom(*args: object, **kwargs: object) -> None:
         raise FileNotFoundError("pmset")
 
-    monkeypatch.setattr(power.sys, "platform", "darwin")
+    monkeypatch.setattr(power.platform, "system", lambda: "Darwin")
     monkeypatch.setattr(power.subprocess, "run", boom)
     assert power.on_ac_power() is False
 
