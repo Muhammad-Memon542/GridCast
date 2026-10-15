@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | Registered | 2026-10-15 |
-| Version | 1.0 (submitted for owner approval) |
+| Version | 1.0, approved by the owner on 2026-10-15 (git tag `prereg-v1.0`) |
 | Machine-readable twin | `configs/project.yaml` (its `config_hash` is stamped on every result) |
 | Integrity | Frozen at the git commit recorded in `README.md`. Later edits appear only in §11 (Amendments) or §12 (Deviations). |
 
@@ -112,6 +112,7 @@ All pre-registered analyses are reported whatever the result, including null and
 Each amendment is dated, gives its reason, and is committed before any model touches test data.
 
 - **2026-10-15, O3.** The owner confirmed ADR-009 option A, so "(pending owner confirmation)" was removed from the O3 row. The definition is unchanged.
+- **2026-10-15, approval.** The owner approved v1.0 as written, including three operationalisations the executor chose where the plan was silent: the RQ1 windows of 12 months on each side; the RQ3 evaluation window (2026-05-01 onward); and the RQ3 baseline definition (k\* = smallest k with CRPS ≤ naive d−7).
 
 ## 12. Deviations (after the first test-window model run)
 

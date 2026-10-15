@@ -16,14 +16,15 @@ The research questions, splits, metrics and decision rules were registered **bef
 | | |
 | --- | --- |
 | File | [`PREREGISTRATION.md`](PREREGISTRATION.md) |
-| Registered | 2026-10-15 |
-| Commit | `0696d2762e4ceb52ad6bd01959bbc06e561df91e` |
+| Registered | 2026-10-15, commit `47d695503c10cd6aac072287f75e5dceff35f8d9` |
 | SHA-256 of file at that commit | `36b7789496407ae40c170cbb7bdebb6c6d5ec0425707dac058fd0124d2c0adda` |
+| Approved by the owner | 2026-10-15, git tag `prereg-v1.0`. Later changes appear only in its §11 (Amendments) and §12 (Deviations). |
 
 Check it yourself:
 
 ```bash
-git show 0696d27:PREREGISTRATION.md | shasum -a 256
+git show 47d6955:PREREGISTRATION.md | shasum -a 256
+git diff 47d6955 prereg-v1.0 -- PREREGISTRATION.md
 ```
 
 ## Quick start
