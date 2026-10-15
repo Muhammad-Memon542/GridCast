@@ -27,7 +27,10 @@ Two logs live here:
 - Consequences: these values are encoded in `configs/project.yaml` and covered by `PREREGISTRATION.md`.
 
 ### ADR-001 — Backfill route for post-May-2025 prices `[OWNER]`
-- Status: **Open**, needed by end of week 2 (2026-10-30). Input comes from the M1-T1 availability audit.
+- Status: **Accepted: Grid Status hosted API, free plan** (owner, 2026-10-15; the owner created the account and supplied the key, which is stored in git-ignored `.env`). Emailing IESO Customer Relations remains an optional parallel route for data we could republish.
+- Coverage (catalog, 2026-10-15): DA Ontario zonal LMP `ieso_lmp_day_ahead_hourly_ontario_zonal` from 2025-05-03 (~12.3k rows); RT 5-min `ieso_lmp_real_time_5_min_ontario_zonal` from 2025-05-01 (~148k rows); **pre-dispatch with every vintage** `ieso_lmp_predispatch_hourly_ontario_zonal` (`publish_time_utc`) from 2025-05-01 (~333k rows). Also HOEP 2002–2025, operator load, adequacy and wind/solar forecasts with vintages (2–8M rows each, too big for the free plan).
+- Free-plan limits (from the API): 500,000 rows and 250 requests per month, 50,000 rows per response, 1 request/s. Pull plan: DA + RT in October (~160k rows); pre-dispatch vintages after the 1 November reset (~333k rows, which enables O3 over the whole test year).
+- Terms of Use (last updated 2026-04-02): licence for internal use and for "Licensee Materials" (derivative works that cannot be reverse-engineered back to the data), with attribution required ("Data provided by Grid Status", with a link and their logo on first use). Publishing a dataset that "substantially reproduces" the data is prohibited. **Consequences:** (1) no Grid Status data in the open dataset (as the plan already assumed); (2) the public dashboard and scorecard show actual prices from our own IESO collector, not Grid Status; (3) the paper, README and dashboard carry the attribution.
 
 ### ADR-002 — Cloud host and object storage `[OWNER]`
 - Status: **Interim host accepted** (owner, 2026-10-15); production host **open**, needed by week 11.
