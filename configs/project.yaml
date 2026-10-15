@@ -1,0 +1,29 @@
+# Pre-registered project constants (see PREREGISTRATION.md and docs/decisions.md).
+# Changing any value here changes ProjectConfig.config_hash(); changes after the
+# pre-registration commit must be logged as deviations in PREREGISTRATION.md.
+
+market:
+  timezone: America/Toronto
+  report_utc_offset_hours: -5     # IESO reports use EST year-round (decisions.md V-02)
+  go_live: 2025-05-01             # Market Renewal Program go-live
+  price_floor: -100.0             # settlement floor for energy, $/MWh (V-04)
+  price_cap: 2000.0               # maximum market clearing price, $/MWh (V-04)
+
+forecast:
+  issue_time_local: "09:00"       # America/Toronto; quoted so YAML does not read it as 540
+  issue_day_offset: -1            # forecasts for delivery day D are issued on D-1
+  quantiles: [0.01, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50,
+              0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99]
+
+splits:                           # inclusive date ranges (plan §10)
+  old_market: {start: 2019-01-01, end: 2025-04-30}
+  validation: {start: 2025-05-01, end: 2025-10-31}
+  test:       {start: 2025-11-01, end: null}    # open-ended: latest available
+
+battery:                          # plan §11 defaults
+  power_mw: 100.0
+  duration_h: 4.0
+  soc_min_frac: 0.10
+  soc_max_frac: 0.90
+  round_trip_efficiency: 0.88
+  degradation_cost_per_mwh: 10.0

@@ -1,0 +1,40 @@
+# Install with `make setup`; run on everything with `make hooks`.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+
+  # Secret scanning (M0-T2). Blocks commits that contain credentials.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+
+  # Ruff and mypy run from the project environment so versions come from uv.lock.
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --locked ruff check --fix
+        language: system
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --locked ruff format
+        language: system
+        types_or: [python, pyi]
+      - id: mypy
+        name: mypy (strict, src/)
+        entry: uv run --locked mypy
+        language: system
+        pass_filenames: false
+        files: ^src/.*\.py$

@@ -1,0 +1,36 @@
+# Python / tooling
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Secrets: only .env.example is committed
+.env
+.env.*
+!.env.example
+
+# Data and run artefacts never go in git (bronze/silver/gold live on disk or object storage)
+data/*
+!data/README.md
+mlruns/
+mlartifacts/
+.dagster/
+*.parquet
+*.duckdb
+
+# Notebooks: no outputs committed
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
