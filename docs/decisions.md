@@ -1,0 +1,141 @@
+# Decision log (ADRs) and verification log
+
+Two logs live here:
+
+1. **ADRs**: architecture and project decisions. Status is one of `Proposed`, `Accepted`, `Superseded by ADR-xxx`, `Rejected`. `[OWNER]` decisions are only `Accepted` once the owner says so.
+2. **Verification log (V-xx)**: every `[VERIFY]` item from the plan, checked against a primary source before code depends on it (plan §0 rule 4).
+
+## ADR template
+
+```markdown
+### ADR-NNN — Title
+- Status: Proposed | Accepted | Superseded by ADR-xxx | Rejected
+- Date: YYYY-MM-DD · Decider: owner | executor
+- Context: what forces the decision
+- Options: A / B / C with trade-offs
+- Decision: …
+- Consequences: what changes, what we give up, follow-up tasks
+```
+
+---
+
+## ADRs
+
+### ADR-000 — Pre-made decisions
+- Status: Accepted · Date: 2026-10-15 · Decider: owner (plan §14)
+- Decision: Python 3.12 + uv; Parquet + DuckDB; Dagster; MLflow; FastAPI; Streamlit; Pyomo/CVXPY + HiGHS; issue time 09:00 America/Toronto on D−1; 21-quantile grid; splits per plan §10; battery defaults per plan §11; TimesFM-3 research-only; Chronos-2 or in-house models for production.
+- Consequences: these values are encoded in `configs/project.yaml` and covered by `PREREGISTRATION.md`.
+
+### ADR-001 — Backfill route for post-May-2025 prices `[OWNER]`
+- Status: **Open**, needed by end of week 2 (2026-10-30). Input comes from the M1-T1 availability audit.
+
+### ADR-002 — Cloud host and object storage `[OWNER]`
+- Status: **Open**. The interim cron host is needed in week 1 for the live collector (M1-T3). The production host is needed by week 11.
+
+### ADR-003 — Weather API: Previous Runs vs. Single Runs, and which model `[OWNER]`
+- Status: **Open**, needed by week 2.
+
+### ADR-004 — Alert channel `[OWNER]`
+- Status: **Open**, needed by week 12.
+
+### ADR-005 — Public forecast log location `[OWNER]`
+- Status: **Open**, needed by week 8.
+
+### ADR-006 — Gas price source (optional) `[OWNER]`
+- Status: **Open**, needed by week 5.
+
+### ADR-007 — Paper venue / workshop `[OWNER]`
+- Status: **Open**, needed by week 12.
+
+### ADR-008 — Configuration system: pydantic-settings + typed YAML (not Hydra)
+- Status: Accepted (executor choice within plan M0-T2; the owner may overrule) · Date: 2026-10-15
+- Context: M0-T2 allows "Hydra or pydantic-settings". We need typed configs that pass `mypy --strict`, a stable `config_hash` for every result file, and secrets that never print.
+- Options:
+  - **A: Hydra.** Strong at CLI overrides and multirun sweeps. Configs are untyped `DictConfig` unless structured configs are used, mypy support is weak, and the last major release was 2023.
+  - **B: pydantic-settings for environment/secrets plus pydantic models validated from YAML.** Typed, validated at load time, `SecretStr` for keys, and the hash is trivial (canonical JSON). No built-in sweep launcher.
+- Decision: **B**. `gridcast.config.Settings` reads `GRIDCAST_*` env vars and `.env`. `ProjectConfig` validates `configs/project.yaml` (frozen, `extra="forbid"`). Backtest and model configs in M3 follow the same pattern. Sweeps are plain Python loops or Optuna.
+- Consequences: no `hydra` CLI overrides. If sweeps get complicated in M3–M4, revisit with a superseding ADR.
+
+### ADR-009 — Operator pre-dispatch baseline (O3) cannot be issued before our forecast `[OWNER]`
+- Status: **Proposed**. Owner decision needed before G1 (see V-07).
+- Context: O3 compares GridCast against "IESO pre-dispatch OZP projection". V-07 shows the first pre-dispatch OZP vintage for delivery day D is published about 20:19 EST on D−1. That is roughly 11 hours after our 09:00 issue time and after the day-ahead results are out. No operator price projection for D exists at issue time.
+- Options:
+  - **A (recommended): keep it as an information-advantaged reference.** Compare our 09:00 D−1 forecast with the operator's *first* pre-dispatch vintage for D, clearly labelled as issued about 11 h later with DAM results known. Report it for both the DA OZP target and the RT OZP secondary target. Pre-dispatch projects real-time prices, so RT OZP is the more natural yardstick. Restate O3 accordingly.
+  - **B: drop O3** and make LEAR, the strongest published EPF baseline, the headline "beat" target.
+  - **C: compare both at a common later issue time** (e.g. 21:00 EST D−1) as a separate experiment. This is fair but no longer actionable for DAM bidding.
+- Consequences of A: the O3 claim becomes "beats/does not beat a later, better-informed operator projection". That is a stronger statement if it holds, and the expected result if it does not. `PREREGISTRATION.md` uses option A pending confirmation.
+
+---
+
+## Verification log
+
+Checked 2026-10-15 by the executor. "Verified" means read in a primary source (an IESO manual or rule text, or IESO's own files and servers), with the evidence listed.
+
+### V-01 — Day-ahead bid window → **Verified**
+- Claim (plan §5.1): the restricted window starts at 10:00 EPT on D−1.
+- Source: IESO Market Manual 4.2 *Operation of the Day-Ahead Market*, Issue 5.0 (2026-06-16), §2.2 "Day-Ahead Market Process Timeline".
+- Finding: the submission window opens 06:00 EPT and **closes 10:00 EPT**, which starts the restricted window. Results are typically issued **by 13:30 EPT**. Results or a failure declaration come by **15:30 EPT** at the latest. The next-day Adequacy report is issued at 05:30 EPT, updated at 09:00 EPT, and updated again after DAM results.
+- Consequence: the issue time of **09:00 America/Toronto on D−1 stands**, with a 1-hour margin. The 09:00 EPT Adequacy update races our issue time, so the as-of join must use `available_at_utc` (normally we get the 05:30 version).
+
+### V-02 — Time convention of IESO reports → **Verified** (final live confirmation on 2026-11-01)
+- Claim (plan §5.1, §7.3): reports index the dispatch day as midnight-to-midnight EST with hour ending 1–24.
+- Evidence:
+  1. The XSD `DAHourlyOntarioZonalPrice_r1.xsd` allows at most 24 `HourlyPriceComponents` (`maxOccurs="24"`), with `PricingHour` of type `Hour1To24` documented as "hour ending at (1 to 24)". A 25-hour EPT day could not be represented.
+  2. `PUB_Demand_2025.csv` and `PUB_Demand_2026.csv` have exactly 24 hourly rows on DST days 2025-03-09, **2025-11-02** and **2026-03-08**. The last two are after go-live.
+  3. `CreatedAt` and directory-listing times line up with HTTP `Last-Modified` only at UTC−5 in October, when Toronto is on EDT (V-03).
+  4. MM 4.2 keeps EST for dispatch-day items (e.g. "pre-dispatch calculation engine runs at 20:00 EST") and EPT for the DAM submission timeline.
+- Consequence: `ts_utc = delivery_date 00:00 at fixed UTC−5 + (hour_ending − 1) h` (`market.report_utc_offset_hours: -5`). Every delivery day has 24 rows, including the plan's DST test dates. The live collector will confirm on delivery date 2026-11-01 (DST ends), the first DST day inside DA OZP retention.
+
+### V-03 — Time zone of `CreatedAt` → **Verified: EST (UTC−5), no offset in the string**
+- Evidence: day-ahead OZP files, comparing `CreatedAt` with HTTP `Last-Modified` (GMT):
+
+  | File | CreatedAt | Last-Modified (GMT) | Implied offset |
+  | --- | --- | --- | --- |
+  | `…_20261015_v1.xml` | 2026-10-14T12:31:28 | 17:33:26 | UTC−5 (2 min lag) |
+  | `…_20260924_v1.xml` | 2026-09-23T12:33:10 | 17:34:16 | UTC−5 |
+  | `…_20260924_v2.xml` | 2026-09-23T14:26:29 | 19:28:27 | UTC−5 |
+
+  The web server's directory listings are also in EST (listing "12:33" equals 17:33 GMT).
+- Consequence: parse `CreatedAt` as naive local time at fixed UTC−5. Never use `America/Toronto` for it.
+
+### V-04 — Price cap and floor → **Verified**
+- Sources: IESO *Guide to IESO Market Calculation Engines* (training guide, Nov 2025) §3.5 "Settlement Price Floors and Caps": "Settlement price floor for energy is set at −$100/MWh and the cap is at $2,000/MWh". Offers may still go as low as −MMCP (−$2,000/MWh). The guide says "at the current time", and secondary summaries of Renewed Market Rules Chapter 7 (Issue 3.0) describe both values as **IESO Board-set parameters**, so they can change. We have not read the Chapter 7 text ourselves yet; do that in M1-T4.
+- Consequence: bounds live in config (`market.price_floor: -100`, `market.price_cap: 2000`), not in code. M1-T4 starts the silver range check on `ZonalPrice` as a warning. It becomes a hard Pandera bound once 90 days of data confirm that published zonal prices are already settlement-bounded (field names such as `LossPriceCapped` and `LmpCap` suggest they are).
+
+### V-05 — File formats, naming and versioning → **Verified, with corrections to plan §5.2 and §7.4**
+- (a) **The un-suffixed daily file is an alias of the latest version, not "version 0".** SHA-256 of `PUB_DAHourlyOntarioZonalPrice_20260924.xml` equals `…_v3.xml`, and `…_20261015.xml` equals `…_v1.xml`. Versions start at `_v1`. **Change to §7.4:** `version` = N from `_vN`. Base files are stored in bronze, de-duplicated by sha256, and resolved to the matching `_vN`. If a base file matches no retained `_vN`, it gets `version = NULL` with `available_at = fetched_at`.
+- (b) **Older versions can vanish from the site.** Delivery 2026-09-11 lists only the base file and `_v2`; there is no `_v1`. Only our own live collector preserves the full vintage history.
+- (c) Day-ahead OZP (`DAHourlyOntarioZonalPrice`, XSD `_r1`): namespace `http://www.ieso.ca/schema`; `DocHeader/CreatedAt`; `DocBody/DeliveryDate`; up to 24 `HourlyPriceComponents{PricingHour, ZonalPrice, LossPriceCapped, CongestionPriceCapped, Flag}`. The XSD documents `Flag` as "administered or from the DSO-RD". It matches plan §5.2.
+- (d) Real-time OZP (`RealtimeOntarioZonalPrice`, XSD `_r2`): **one file per delivery hour**, `PUB_RealtimeOntarioZonalPrice_<YYYYMMDDHH>.xml`. `_vN` grows as 5-minute intervals arrive (e.g. `_v12`). Body: `DeliveryDate`, `DeliveryHour`, 12 × `ZonalPrice{Interval, Flag, LmpCap, LossPriceCap, CongPriceCap}`. The field names differ from the DA report. About 2,760 files are listed.
+- (e) Pre-dispatch OZP (`PredispHourlyOntarioZonalPrice`, XSD `_r1`): one file per delivery date with about 27 hourly versions. `_v1` comes out about 20:19 EST on D−1, then hourly through D. **Intermediate versions are kept about 30 days**; after that only the base file and final version remain, back to about 90 days. Body has no `Flag`.
+- (f) Demand CSV: three `\\`-prefixed header lines including `\\Created at YYYY-MM-DD HH:MM:SS` (EST), then `Date,Hour,Market Demand,Ontario Demand`. Yearly files, with versions like `_v395`.
+- (g) `/docrefs/helpfile/` returns 403 because directory browsing is off. Help PDFs must be fetched by exact name. `/docrefs/schema/<Report>_rN.xsd` is fetchable.
+- (h) Across about 20 requests, the server reset one connection. The collector needs retries with exponential backoff (already in plan §0 rule 10).
+
+### V-06 — Day-ahead results publication time → **Verified, with a correction to plan §7.3**
+- Finding: `CreatedAt` for the first version of D is 12:31–12:33 EST on D−1, which is **13:31–13:33 EDT** in summer. Corrections arrive within hours (2026-09-24: `_v2` 14:26, `_v3` 14:27 EST) or days later (2026-09-11: `_v2` on 09-15).
+- Consequence: the plan's example rule "day-ahead OZP for D available at 13:00 Eastern on D−1" is **too early during DST**. For backfilled data without vintages, use **15:30 EPT on D−1**, the market-rule deadline in V-01. This never binds at a 09:00 issue time, but it keeps the rule safe for later issue times.
+
+### V-07 — Pre-dispatch OZP timing → **Verified; affects objective O3** (see ADR-009)
+- Evidence: versions of `PUB_PredispHourlyOntarioZonalPrice_20261014`: `_v1` at 2026-10-13 20:19 EST, then hourly to `_v27` at 2026-10-14 22:23 EST.
+- Consequence: **no operator price projection for D exists at 09:00 D−1.** O3 needs restating (ADR-009).
+
+### V-08 — Data-quality note found in passing
+- `PUB_Demand_2025.csv` has **23 rows for 2025-05-01**, the go-live day. Triage in M1-T9.
+
+### Deferred `[VERIFY]` items (checked in the milestone that needs them)
+
+| Item | Plan ref | When |
+| --- | --- | --- |
+| Grid Status dataset IDs, free-tier limits, terms and redistribution | §5.2 | M1-T1 audit (feeds ADR-001) |
+| IESO terms of use for redistributing report data | M7-T2 | M1-T1 audit, because it shapes what the bronze store may later publish |
+| Open-Meteo Single Runs publication latency; Previous Runs coverage per model | §5.3 | M1-T6 / ADR-003 |
+| Chronos-2 `predict_df` signature and fine-tuning API | §5.4 | M4-T1 |
+| Moirai 2.0 / TiRex package names, APIs, licences | §5.4 | M4-T1 |
+| DST behaviour of DA OZP on 2026-11-01 (live confirmation of V-02) | §7.3 | M1-T3, after 2026-10-31 13:30 EPT |
+
+### Sources
+- IESO public reports: https://reports-public.ieso.ca/public/ (folders `DAHourlyOntarioZonalPrice`, `RealtimeOntarioZonalPrice`, `PredispHourlyOntarioZonalPrice`, `Demand`), schemas at https://reports-public.ieso.ca/docrefs/schema/
+- Market Manual 4.2, Issue 5.0: https://ieso.ca/-/media/Files/IESO/Document-Library/Renewed-Market-Rules-and-Manuals/market-manuals/market-operations/ieso-mo-operation-dam.pdf
+- Guide to IESO Market Calculation Engines (Nov 2025): https://ieso.ca/-/media/Files/IESO/Document-Library/training/Guide-to-IESO-Market-Calculation-Engines.pdf
+- Renewed Market Rules Chapter 7, Issue 3.0: https://www.ieso.ca/-/media/Files/IESO/Document-Library/Renewed-Market-Rules-and-Manuals/market-rules/ieso-mr-chapter0-7.pdf
