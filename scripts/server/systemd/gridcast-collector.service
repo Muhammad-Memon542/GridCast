@@ -1,0 +1,14 @@
+[Unit]
+Description=GridCast IESO live snapshot collector (M1-T3)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=gridcast
+WorkingDirectory=/home/gridcast/gridcast
+ExecStart=/home/gridcast/gridcast/.venv/bin/gridcast collect
+Nice=10
+IOSchedulingClass=idle
+# The first pass downloads ~13k files at 1 request/s; later passes take about a minute.
+TimeoutStartSec=6h
