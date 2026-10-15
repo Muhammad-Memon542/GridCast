@@ -35,6 +35,7 @@ Two logs live here:
 - Why this is safe for the data: every run re-lists each folder and fetches anything it has not seen. Being off or on battery only delays collection. Data is lost only if the Mac is never plugged in for longer than the shortest on-site retention (~30 days for intermediate pre-dispatch, VG-forecast and generator-output versions; real-time intermediate versions are not kept anyway, see ADR-010).
 - Cost: the first run fetches ~13,000 files (~1.5 GB raw), about 3–4 h at 1 request/s. After that, ~25 MB/day raw, stored gzip-compressed.
 - Follow-up: move to GitHub Actions or a small host with object storage when the production host is chosen.
+- **Budget (owner, 2026-10-15):** a small monthly cost for the production host is approved. Recommendation: one small always-on Ubuntu VM (DigitalOcean Toronto, 1–2 GB) running the collector, the daily forecast job, the API and the dashboard in Docker. That also removes the collector's dependency on the Mac being plugged in. The owner creates the account and VM (payment is `[OWNER]`); access is by a dedicated deploy SSH key (`~/.ssh/gridcast_deploy`).
 
 ### ADR-003 — Weather API: Previous Runs vs. Single Runs, and which model `[OWNER]`
 - Status: **Open**, needed by week 2.
