@@ -1,0 +1,31 @@
+# Live snapshot collector (M1-T3). Order = priority: reports whose history disappears
+# soonest come first, so a run that is cut short still saves the scarcest data.
+#
+#   every_hours   minimum time between folder listings (the job itself runs hourly)
+#   versions      all = keep every _vN (forecast vintages); latest = newest per period
+#   lookback_days ignore files whose period ended longer ago (on-site retention is <= 90)
+#   check_gaps    include in `gridcast gaps` (off for reports that skip days)
+
+base_url: https://reports-public.ieso.ca/public/
+
+reports:
+  # ~30 days of vintages on site: lost forever if not collected (risk R2)
+  - {name: PredispHourlyOntarioZonalPrice, dataset: D03, every_hours: 1, versions: all, lookback_days: 120}
+  - {name: VGForecastSummary,              dataset: D08, every_hours: 1, versions: all, lookback_days: 120}
+  - {name: GenOutputCapability,            dataset: D07, every_hours: 6, versions: all, lookback_days: 120}
+  - {name: IntertieScheduleFlow,           dataset: D09, every_hours: 6, versions: all, lookback_days: 120}
+
+  # ~90 days on site
+  - {name: Adequacy3,                      dataset: D06, every_hours: 3, versions: all, lookback_days: 120}
+  - {name: DAHourlyOntarioZonalPrice,      dataset: D01, every_hours: 1, versions: all, lookback_days: 120}
+  - {name: DATotals,                       dataset: D06, every_hours: 24, versions: all, lookback_days: 120}
+  - {name: DAHourlyZonal,                  dataset: D10, every_hours: 24, versions: all, lookback_days: 120}
+  - {name: DAConstrShadowPrices,           dataset: D11, every_hours: 24, versions: all, lookback_days: 120, check_gaps: false}
+  # Real-time files gain one _vN per 5-minute interval; only the completed hour matters.
+  - {name: RealtimeOntarioZonalPrice,      dataset: D02, every_hours: 3, versions: latest, lookback_days: 120}
+  - {name: RealtimeZonalEnergyPrices,      dataset: D10, every_hours: 24, versions: latest, lookback_days: 120}
+
+  # Yearly / monthly CSVs: current and just-finished period only (history is M1-T5 backfill)
+  - {name: Demand,                         dataset: D05, every_hours: 24, versions: latest, lookback_days: 45}
+  - {name: GenOutputCapabilityMonth,       dataset: D07, every_hours: 24, versions: latest, lookback_days: 45}
+  - {name: IntertieScheduleFlowYear,       dataset: D09, every_hours: 24, versions: latest, lookback_days: 45}

@@ -5,10 +5,11 @@ UV_RUN := uv run --locked
 
 .DEFAULT_GOAL := help
 .PHONY: help setup check lint format typecheck test hooks \
+        collect gaps collector-install collector-uninstall \
         data dq backtest results figures paper serve
 
 help:  ## Show this help
-	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
+	@grep -E '^[a-z][a-z -]*:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-20s %s\n", $$1, $$2}'
 
 setup:  ## Create the environment and install git hooks
 	uv sync --locked
@@ -33,8 +34,20 @@ test:  ## pytest with coverage gate (network disabled)
 hooks:  ## Run every pre-commit hook (incl. gitleaks) on all files
 	$(UV_RUN) pre-commit run --all-files
 
+collect:  ## (M1-T3) Run one collector pass now, ignoring cadence (needs network)
+	$(UV_RUN) gridcast collect --force
+
+gaps:  ## (M1-T3) Live-collector gap report for the last 7 days
+	$(UV_RUN) gridcast gaps --days 7
+
+collector-install:  ## (M1-T3) Install the hourly, AC-power-only LaunchAgent (macOS)
+	scripts/collector/install.sh
+
+collector-uninstall:  ## Remove the LaunchAgent (keeps collected data)
+	scripts/collector/uninstall.sh
+
 # Targets below arrive with later milestones; they fail loudly until then.
-data dq:  ## (M1) Ingest / data-quality report
+data dq:  ## (M1) Silver tables / data-quality report
 	@echo "make $@: not implemented yet (milestone M1)"; exit 1
 backtest results:  ## (M3) Rolling-origin backtest / results tables
 	@echo "make $@: not implemented yet (milestone M3)"; exit 1

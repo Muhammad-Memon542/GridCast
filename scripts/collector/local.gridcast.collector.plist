@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- GridCast live collector (M1-T3). __REPO__ is filled in by install.sh. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>local.gridcast.collector</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__REPO__/.venv/bin/gridcast</string>
+        <string>collect</string>
+        <string>--require-ac</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__REPO__</string>
+    <!-- Hourly at :07. A run missed while asleep fires once on wake; launchd never wakes the Mac. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Minute</key>
+        <integer>7</integer>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+    <key>Nice</key>
+    <integer>10</integer>
+    <key>StandardOutPath</key>
+    <string>__REPO__/data/logs/collector.log</string>
+    <key>StandardErrorPath</key>
+    <string>__REPO__/data/logs/collector.err.log</string>
+</dict>
+</plist>
