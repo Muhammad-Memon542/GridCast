@@ -32,4 +32,4 @@ One row per dataset in plan §6. Earliest-available dates and the ADR-001 recomm
 
 ## Live collector
 
-`configs/collector.yaml` lists the reports collected live, scarcest history first. The collector runs hourly from a LaunchAgent on the owner's Mac while it is on AC power (ADR-002). It stores files gzip-compressed under `data/bronze/ieso/<Report>/<date>/` and logs every observation in `data/bronze/_manifest.sqlite` (ADR-010). Commands: `make collect` runs a pass now, `make gaps` shows the gap report, and `make collector-install` / `make collector-uninstall` manage the agent.
+`configs/collector.yaml` lists the reports collected live, scarcest history first. The collector runs hourly on the production server (systemd timer, ADR-002, `docs/runbook.md`). The Mac LaunchAgent is only a fallback. It stores files gzip-compressed under `data/bronze/ieso/<Report>/<date>/` and logs every observation in `data/bronze/_manifest.sqlite` (ADR-010). Commands: `make collect` runs a pass now, `make gaps` shows the gap report, and `make collector-install` / `make collector-uninstall` manage the agent.

@@ -3,13 +3,17 @@
 
 UV_RUN := uv run --locked
 
+-include .env  # GRIDCAST_SERVER etc. (git-ignored)
+SSH := ssh -i $(HOME)/.ssh/gridcast_deploy $(GRIDCAST_SERVER)
+
 .DEFAULT_GOAL := help
 .PHONY: help setup check lint format typecheck test hooks \
         collect gaps collector-install collector-uninstall \
+        server-bootstrap server-status server-gaps \
         data dq backtest results figures paper serve
 
 help:  ## Show this help
-	@grep -E '^[a-z][a-z -]*:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-20s %s\n", $$1, $$2}'
+	@grep -E '^[a-z][a-z -]*:.*## ' $(firstword $(MAKEFILE_LIST)) | awk -F':.*## ' '{printf "  %-20s %s\n", $$1, $$2}'
 
 setup:  ## Create the environment and install git hooks
 	uv sync --locked
@@ -45,6 +49,15 @@ collector-install:  ## (M1-T3) Install the hourly, AC-power-only LaunchAgent (ma
 
 collector-uninstall:  ## Remove the LaunchAgent (keeps collected data)
 	scripts/collector/uninstall.sh
+
+server-bootstrap:  ## Set up / update the production server (idempotent)
+	$(SSH) 'bash -s' < scripts/server/bootstrap.sh
+
+server-status:  ## Collector timer state and latest log lines on the server
+	$(SSH) 'systemctl list-timers gridcast-collector.timer --no-pager | head -2; journalctl -u gridcast-collector.service --no-pager -o cat -n 5'
+
+server-gaps:  ## Gap report from the production collector
+	$(SSH) 'cd gridcast && .venv/bin/gridcast gaps --days 7'
 
 # Targets below arrive with later milestones; they fail loudly until then.
 data dq:  ## (M1) Silver tables / data-quality report

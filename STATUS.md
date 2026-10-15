@@ -1,6 +1,6 @@
 # Status — week 0 (2026-10-15)
 
-Milestone: M1 in progress (M0 complete) | Overall: **Amber**. The collector is installed but has not done its first full pass yet; it waits for AC power.
+Milestone: M1 in progress (M0 complete; fast track) | Overall: **Green**. The collector runs 24/7 on the production server; its first full pass started 2026-10-16 00:00 UTC.
 
 Work started on Thursday 2026-10-15, ahead of the plan's assumed start of Monday 2026-10-19.
 
@@ -11,18 +11,20 @@ Work started on Thursday 2026-10-15, ahead of the plan's assumed start of Monday
 - [M0-T4] `PREREGISTRATION.md`, **approved by the owner 2026-10-15** (tag `prereg-v1.0`), with its hash in the README
 - [M0-T5] `[VERIFY]` sweep, V-01 to V-08
 - [M1-T2] Generic IESO collector: listing parser, polite client (≤1 req/s, backoff), sha256 dedupe, SQLite manifest, gzip bronze (ADR-010), recorded fixtures with no network in tests. AC met: a live rerun downloaded 0 files.
-- [M1-T3, partial] Live collector installed as a LaunchAgent: hourly, AC power only (ADR-002 interim). Gap report: `make gaps`. *Still open: 7 consecutive gap-free days.*
+- [M1-T3, partial] Live collector on the Azure production server (systemd timer, hourly). The Mac LaunchAgent was removed and is kept as a fallback. Gap report: `make server-gaps`. *Still open: 7 consecutive gap-free days.*
+- ADR-001 accepted (Grid Status free plan); ADR-002 accepted (Azure for Students VM, Canada Central). See `docs/runbook.md`.
 
 **Next**
-- First full collector pass (~13k files, 3–4 h) the next time the Mac is plugged in
+- Let the first full collector pass finish (~13k files, 3–4 h)
+- [M1-T5] Backfill DA and RT OZP from Grid Status (~160k rows this month); pre-dispatch vintages after the 1 Nov quota reset
 - [M1-T1] Data-availability audit, then the ADR-001 recommendation
 - [M1-T4] Parsers to silver
 
 **Blocked / needs owner**
-- Plug the Mac in regularly (at least every ~2 weeks) so the collector catches up
+- Nothing blocking
 
 **Risks changed**
-- R2 (forward-report loss): mitigation in place. It becomes low once the first full pass completes.
+- R2 (forward-report loss): **low**. 24/7 server collector; no dependency on the Mac.
 - New: DAConstrShadowPrices is published ~6 days late (V-09). It cannot feed issue-time features.
 
 **Data health:** collection started 2026-10-15 (smoke test: DAConstrShadowPrices, 28 files). Gap report: no complete day yet.
