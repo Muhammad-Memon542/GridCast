@@ -5,7 +5,7 @@ Milestone: M1 in progress (M0 complete) | Overall: **Amber**. The collector is i
 Work started on Thursday 2026-10-15, ahead of the plan's assumed start of Monday 2026-10-19.
 
 **Done**
-- [M0-T1] Repo scaffold: uv, Python 3.12.15, ruff, mypy `--strict`, pytest, pre-commit, Makefile, GitHub Actions. *CI green is pending the first push.*
+- [M0-T1] Repo scaffold: uv, Python 3.12.15, ruff, mypy `--strict`, pytest, pre-commit, Makefile, GitHub Actions. **CI green** on GitHub (run 38798872788, commit c0c9cf5)
 - [M0-T2] Config system (ADR-008); `.env.example`; gitleaks hook shown to block a fake token
 - [M0-T3] `docs/decisions.md`, `STATUS.md`, `docs/data_sources.md`
 - [M0-T4] `PREREGISTRATION.md`, **approved by the owner 2026-10-15** (tag `prereg-v1.0`), with its hash in the README
