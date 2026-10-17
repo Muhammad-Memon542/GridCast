@@ -196,3 +196,65 @@ def run_validation(
         else None,
     )
     return result, evaluate(result, features, da_ozp, validation_spike_threshold(da_ozp, cfg))
+
+
+def run_test(
+    model_name: str,
+    frozen: dict[str, Any],
+    frozen_file: Path,
+    *,
+    data_dir: Path | None = None,
+    out_root: Path | None = None,
+    last_day: date | None = None,
+) -> tuple[BacktestResult, Scores]:
+    """Score a frozen model on the test window. Opens the seal only for a committed frozen file."""
+    settings = Settings()
+    data_dir = data_dir or settings.data_dir
+    cfg = load_backtest_config()
+    project = load_project_config()
+    seal = WindowSeal.open_with(project.splits.test.start, frozen_file)
+    da_ozp = pd.read_parquet(data_dir / "silver" / "da_ozp").drop(
+        columns=["month"], errors="ignore"
+    )
+    final_day = last_day or max(truth(da_ozp).index).tz_convert("Etc/GMT+5").date()
+    features = load_features(data_dir, final_day, cfg)
+    bt = BacktestConfig(
+        eval_start=project.splits.test.start,
+        eval_end=final_day,
+        refit_every_days=cfg.models[model_name].refit_every_days,
+        min_train_days=cfg.min_train_days,
+        residual_days=cfg.residual_days,
+        min_residual_days=cfg.min_residual_days,
+    )
+    params = frozen.get("params") or {}
+    calibrate = bool(frozen.get("calibrate_cqr"))
+    payload: dict[str, object] = {
+        "model": model_name,
+        "params": params,
+        "calibrated": calibrate,
+        "window": "test",
+        "backtest": bt.__dict__,
+    }
+    meta: dict[str, object] = {
+        "run_id": uuid.uuid4().hex[:12],
+        "model_name": model_name,
+        "git_sha": git_sha(),
+        "config_hash": config_hash(payload),
+        "data_snapshot_id": snapshot_id(data_dir, FEATURE_TABLES),
+        "window": "test",
+    }
+    out_dir = None if out_root is None else out_root / f"{model_name}_{meta['config_hash']}"
+    result = run_backtest(
+        model_registry({model_name: params})[model_name],
+        features,
+        da_ozp,
+        bt,
+        seal=seal,
+        quantiles=project.forecast.quantiles,
+        out_dir=out_dir,
+        run_meta=meta,
+        calibrator=RollingCQR(window_days=cfg.residual_days, min_days=cfg.min_residual_days)
+        if calibrate
+        else None,
+    )
+    return result, evaluate(result, features, da_ozp, validation_spike_threshold(da_ozp, cfg))

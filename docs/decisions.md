@@ -185,6 +185,13 @@ Checked 2026-10-15 by the executor. "Verified" means read in a primary source (a
 | Demand 2025-05-01 HE1 absent | V-08 | IESO's own file. Left missing |
 | DA OZP never negative (min 0.00); RT reached the −$100 floor 5 times, 512 negative intervals | `dq_report.md` | Real behaviour, not an error. Note for EDA (M2) |
 
+### V-13 — Method notes from the first model runs (2026-10-17)
+- **LEAR (re-implemented).** epftoolbox predates Python 3.12, so LEAR uses scikit-learn's `LassoLarsIC(criterion="aic")`. Since scikit-learn 1.1 that class refuses n < p without a noise-variance estimate. Passing `noise_variance = var(y)` reproduces the pre-1.1 behaviour that epftoolbox relied on. Calibration windows are (56, 84, 182, 364) days instead of Lago's (56, 84, 1092, 1456) because the renewed market only began 2025-05-01.
+- **Point-model quantiles.** Naive, LEAR and SARIMAX produce a median; quantiles come from the model's own rolling out-of-sample residuals (last 56 days, published by the issue time), falling back to in-sample residuals for the first 14 days.
+- **Rolling CQR (M3-T8)** must be fitted on *raw* (pre-calibration) past quantiles. Calibrating on already-calibrated history shrinks the correction and under-covers: LightGBM 90% coverage was 0.863 with the bug and 0.901 after the fix. The engine stores `value_raw` next to `value`.
+- **LightGBM** needs the OpenMP runtime: `brew install libomp` on macOS; `libgomp1` on Ubuntu (in the bootstrap script).
+- **RQ1 placebo:** see `docs/results/rq1_placebo.md`. The pre-registered rule fires at 1 of 5 old-market placebo dates.
+
 ### Deferred `[VERIFY]` items (checked in the milestone that needs them)
 
 | Item | Plan ref | When |

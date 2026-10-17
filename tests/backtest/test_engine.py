@@ -226,3 +226,10 @@ def test_rolling_cqr_repairs_an_overconfident_model() -> None:
     assert 0.85 <= coverage90(calibrated) <= 0.96
     medians = calibrated.forecasts[calibrated.forecasts["quantile"] == 0.5]
     assert np.allclose(medians["value"], medians["value_raw"])  # CQR never moves the median
+
+
+def test_run_test_refuses_without_a_committed_frozen_config(tmp_path: Path) -> None:
+    from gridcast.backtest.runner import run_test
+
+    with pytest.raises(SealedWindowError, match="committed"):
+        run_test("lear", {"params": {}}, tmp_path / "lear.yaml", data_dir=tmp_path)
