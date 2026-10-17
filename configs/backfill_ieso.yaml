@@ -1,0 +1,11 @@
+# One-off IESO history backfill (M1-T5): `gridcast collect --config configs/backfill_ieso.yaml --force`.
+# Same collector, but every period on the site, newest version only. The live collector
+# (configs/collector.yaml) keeps the current year/month up to date afterwards.
+
+base_url: https://reports-public.ieso.ca/public/
+
+reports:
+  - {name: PriceHOEPPredispOR,       dataset: D04, every_hours: 24, versions: latest, lookback_days: 9500, check_gaps: false}
+  - {name: Demand,                   dataset: D05, every_hours: 24, versions: latest, lookback_days: 9500, check_gaps: false}
+  - {name: GenOutputCapabilityMonth, dataset: D07, every_hours: 24, versions: latest, lookback_days: 2800, check_gaps: false}
+  - {name: IntertieScheduleFlowYear, dataset: D09, every_hours: 24, versions: latest, lookback_days: 3300, check_gaps: false}

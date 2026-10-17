@@ -15,6 +15,8 @@ from gridcast.ingest.collector import CollectorConfig, ReportSpec
 from gridcast.ingest.manifest import Manifest, StoredFile
 from gridcast.timeutil.ieso import ieso_date
 
+PUBLICATION_GRACE = timedelta(hours=2)
+
 
 @dataclass
 class ReportGaps:
@@ -108,9 +110,16 @@ def gap_report(
     started = manifest.first_collecting_run()
     if started is None:
         return GapReport(window=[], reports=[])
-    yesterday = ieso_date(now) - timedelta(days=1)
-    first = max(yesterday - timedelta(days=days - 1), ieso_date(started))
-    window = [first + timedelta(days=i) for i in range((yesterday - first).days + 1)]
+    # A day can only be judged once every checked report has been listed after that day
+    # ended (plus a grace period for the last hour's files). Daily-cadence reports therefore
+    # hold the window back by up to a day instead of showing false gaps.
+    last = ieso_date(now) - timedelta(days=1)
+    for spec in config.reports:
+        listed = manifest.last_ok_listing(spec.name) if spec.check_gaps else None
+        if listed is not None:
+            last = min(last, ieso_date(listed - PUBLICATION_GRACE) - timedelta(days=1))
+    first = max(last - timedelta(days=days - 1), ieso_date(started))
+    window = [first + timedelta(days=i) for i in range((last - first).days + 1)]
     holes_from = ieso_date(started)
     return GapReport(
         window=window,

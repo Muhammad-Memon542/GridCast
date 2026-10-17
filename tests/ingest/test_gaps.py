@@ -91,6 +91,16 @@ def test_streak_counts_back_from_yesterday(manifest: Manifest) -> None:
     assert gap_report(manifest, config, days=7, now=NOW).gap_free_streak == 2  # Oct 3, 4
 
 
+def test_window_waits_for_a_listing_after_the_day_ends(manifest: Manifest) -> None:
+    # "Daily" was listed at NOW, but "Late" only before Oct 4 ended, so Oct 4 is not judged.
+    manifest.add_listing("Late", "r", datetime(2026, 10, 4, 23, 0, tzinfo=UTC), 1, ok=True)
+    config = CollectorConfig(
+        base_url="https://x.test/", reports=(_spec("Hourly", "latest"), _spec("Late"))
+    )
+    report = gap_report(manifest, config, days=7, now=NOW)
+    assert report.window[-1] == date(2026, 10, 3)
+
+
 def test_empty_manifest(tmp_path: Path) -> None:
     config = CollectorConfig(base_url="https://x.test/", reports=(_spec("Daily"),))
     with Manifest(tmp_path / "m.sqlite") as m:
