@@ -32,6 +32,10 @@ class FeatureConfig(BaseModel):
     rt_lags_days: tuple[int, ...]
     demand_lags_days: tuple[int, ...]
     weather_weights: dict[str, float]
+    gen_lags_days: tuple[int, ...] = ()
+    gen_features: dict[str, tuple[str, ...]] = Field(default_factory=dict)
+    """Fuel -> columns of ``gen_by_fuel`` to lag, e.g. ``{"nuclear": ("capability_mw",)}``."""
+    intertie_lags_days: tuple[int, ...] = ()
 
 
 def load_feature_config(path: Path | None = None) -> FeatureConfig:
@@ -48,6 +52,8 @@ class FeatureInputs:
     rt_hourly: pd.DataFrame
     demand: pd.DataFrame
     weather: pd.DataFrame
+    gen_by_fuel: pd.DataFrame | None = None
+    intertie: pd.DataFrame | None = None
 
     @classmethod
     def from_silver(cls, data_dir: Path) -> FeatureInputs:
@@ -55,7 +61,14 @@ class FeatureInputs:
             frame = pd.read_parquet(data_dir / "silver" / name)
             return frame.drop(columns=["month"], errors="ignore")
 
-        return cls(read("da_ozp"), read("rt_ozp_hourly"), read("demand"), read("weather_fcst"))
+        return cls(
+            da_ozp=read("da_ozp"),
+            rt_hourly=read("rt_ozp_hourly"),
+            demand=read("demand"),
+            weather=read("weather_fcst"),
+            gen_by_fuel=read("gen_by_fuel"),
+            intertie=read("intertie"),
+        )
 
 
 def known_at(frame: pd.DataFrame, issue: datetime) -> pd.DataFrame:
@@ -141,6 +154,29 @@ def build_features(
         values, avail = _lagged(out, demand, "ontario_demand", lag, f"demand_lag{lag}")
         out[values.name] = values
         availability.append(avail)
+
+    if inputs.gen_by_fuel is not None:
+        gen = known_at(inputs.gen_by_fuel, issue)
+        for fuel, columns in config.gen_features.items():
+            rows = gen[gen["fuel"] == fuel].drop_duplicates("ts_utc", keep="last")
+            for col in columns:
+                for lag in config.gen_lags_days:
+                    name = f"{fuel}_{col.removesuffix('_mw')}_lag{lag}"
+                    values, avail = _lagged(out, rows, col, lag, name)
+                    out[name] = values
+                    availability.append(avail)
+
+    if inputs.intertie is not None:
+        intertie = latest_per_ts(known_at(inputs.intertie, issue))
+        for lag in config.intertie_lags_days:
+            for col, short in [
+                ("total_flow_mw", "flow"),
+                ("imports_sched_mw", "imports"),
+                ("exports_sched_mw", "exports"),
+            ]:
+                values, avail = _lagged(out, intertie, col, lag, f"intertie_{short}_lag{lag}")
+                out[values.name] = values
+                availability.append(avail)
 
     weather, weather_avail, lead = _weather_features(out, inputs.weather, issue, config)
     out = pd.concat([out, weather], axis=1)

@@ -7,7 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from gridcast.parse.ieso_csv import parse_demand, parse_hoep, read_ieso_csv
+from gridcast.parse.ieso_csv import (
+    parse_demand,
+    parse_gen_month,
+    parse_hoep,
+    parse_intertie_year,
+    read_ieso_csv,
+)
 from gridcast.parse.ieso_xml import parse_da_ozp, parse_predisp_ozp, parse_rt_ozp
 
 FIX = Path(__file__).parents[1] / "fixtures" / "ieso"
@@ -117,3 +123,23 @@ def test_external_entities_are_not_resolved() -> None:
     assert df.loss_price_capped.isna().all()  # entity left unexpanded, never read from disk
     assert df.congestion_price_capped.isna().all()  # empty_or_decimal -> NaN
     assert df.doc_created_at.isna().all()
+
+
+def test_gen_month_sums_units_by_fuel() -> None:
+    df = parse_gen_month(_read("PUB_GenOutputCapabilityMonth_202609_excerpt.csv"))
+    he17 = df[df.hour_ending == 17].set_index("fuel")
+    assert set(he17.index) == {"hydro", "nuclear", "wind"}
+    # The excerpt keeps every nuclear unit, one hydro and one wind unit.
+    assert (he17.loc["nuclear", "output_mw"], he17.loc["nuclear", "capability_mw"]) == (8466, 8575)
+    assert he17.loc["wind", "available_capacity_mw"] == 60
+    assert he17.loc["wind", "capability_mw"] != he17.loc["wind", "capability_mw"]  # NaN for wind
+    assert len(df) == 3 * 24
+    assert df.doc_created_at.iloc[0] == datetime(2026, 10, 1, 11, 0, 9, tzinfo=UTC)
+
+
+def test_intertie_year_totals() -> None:
+    df = parse_intertie_year(_read("PUB_IntertieScheduleFlowYear_2025_excerpt.csv"))
+    assert len(df) == 24
+    first = df.iloc[0]
+    assert (first.imports_sched_mw, first.exports_sched_mw, first.total_flow_mw) == (94, 3502, 3843)
+    assert first.doc_created_at == datetime(2026, 1, 31, 13, 2, 8, tzinfo=UTC)

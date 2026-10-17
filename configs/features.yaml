@@ -2,6 +2,14 @@
 price_lags_days: [1, 2, 7]     # DA OZP for D-1 is published ~13:30 EPT on D-2: known at issue
 rt_lags_days: [2]              # RT for D-2 is complete shortly after midnight on D-1
 demand_lags_days: [2]          # demand for D-2 is complete by 08:00 EST on D-1
+gen_lags_days: [2]             # generator output for D-2 is published ~06:00 EST on D-1
+gen_features:
+  nuclear: [output_mw, capability_mw]
+  gas: [output_mw, capability_mw]
+  hydro: [output_mw]
+  wind: [output_mw]
+  solar: [output_mw]
+intertie_lags_days: [3]        # D-2 interties publish ~08:02 EST on D-1, after a 09:00 EDT issue
 # Weather points are averaged with these weights. Equal for now; set from zonal demand
 # shares before models are frozen (M3-T6).
 weather_weights: {toronto: 1, ottawa: 1, hamilton: 1, london: 1, kitchener: 1, windsor: 1, chatham_kent: 1, sudbury: 1}

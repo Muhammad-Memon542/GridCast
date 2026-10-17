@@ -38,6 +38,9 @@ CONFIG = FeatureConfig(
     rt_lags_days=(2,),
     demand_lags_days=(2,),
     weather_weights={"a": 1.0, "b": 3.0},
+    gen_lags_days=(2,),
+    gen_features={"nuclear": ("output_mw", "capability_mw")},
+    intertie_lags_days=(3,),
 )
 
 
@@ -82,6 +85,30 @@ def synthetic_inputs(rng: np.random.Generator, issue: datetime) -> FeatureInputs
     demand = pd.DataFrame(
         {"ts_utc": ts, "ontario_demand": rng.uniform(1e4, 2e4, n), "available_at_utc": offsets(n)}
     )
+    gen = pd.concat(
+        [
+            pd.DataFrame(
+                {
+                    "ts_utc": ts,
+                    "fuel": fuel,
+                    "output_mw": rng.uniform(0, 9000, n),
+                    "capability_mw": rng.uniform(0, 9000, n),
+                    "available_at_utc": offsets(n),
+                }
+            )
+            for fuel in ("nuclear", "gas")
+        ],
+        ignore_index=True,
+    )
+    intertie = pd.DataFrame(
+        {
+            "ts_utc": ts,
+            "total_flow_mw": rng.normal(0, 2000, n),
+            "imports_sched_mw": rng.uniform(0, 3000, n),
+            "exports_sched_mw": rng.uniform(0, 3000, n),
+            "available_at_utc": offsets(n),
+        }
+    )
     valid = _hours(TARGET, 1)
     weather = pd.concat(
         [
@@ -101,7 +128,9 @@ def synthetic_inputs(rng: np.random.Generator, issue: datetime) -> FeatureInputs
         ],
         ignore_index=True,
     )
-    return FeatureInputs(da_ozp=da, rt_hourly=rt, demand=demand, weather=weather)
+    return FeatureInputs(
+        da_ozp=da, rt_hourly=rt, demand=demand, weather=weather, gen_by_fuel=gen, intertie=intertie
+    )
 
 
 def reference_lag(table: pd.DataFrame, value: str, ts: pd.Timestamp, issue: datetime) -> float:
@@ -143,6 +172,17 @@ def test_no_feature_uses_data_published_after_issue(seed: int, minutes_before: i
             inputs.demand, "ontario_demand", row.ts_utc - pd.Timedelta(days=2), issue
         )
         assert row["demand_lag2"] == pytest.approx(expected, nan_ok=True)
+        assert inputs.gen_by_fuel is not None
+        assert inputs.intertie is not None
+        nuclear = inputs.gen_by_fuel[inputs.gen_by_fuel.fuel == "nuclear"]
+        for col in ("output_mw", "capability_mw"):
+            expected = reference_lag(nuclear, col, row.ts_utc - pd.Timedelta(days=2), issue)
+            name = f"nuclear_{col.removesuffix('_mw')}_lag2"
+            assert row[name] == pytest.approx(expected, nan_ok=True)
+        expected = reference_lag(
+            inputs.intertie, "total_flow_mw", row.ts_utc - pd.Timedelta(days=3), issue
+        )
+        assert row["intertie_flow_lag3"] == pytest.approx(expected, nan_ok=True)
 
 
 # 2. Canary test --------------------------------------------------------------------

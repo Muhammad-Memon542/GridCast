@@ -86,6 +86,20 @@ IESO_FILES = [
         "2026-10-16T21:00:00+00:00",
     ),
     (
+        "GenOutputCapabilityMonth",
+        "PUB_GenOutputCapabilityMonth_202609_excerpt.csv",
+        "202609",
+        30,
+        "2026-10-01T11:01:00+00:00",
+    ),
+    (
+        "IntertieScheduleFlowYear",
+        "PUB_IntertieScheduleFlowYear_2025_excerpt.csv",
+        "2025",
+        287,
+        "2026-01-31T13:03:00+00:00",
+    ),
+    (
         "PriceHOEPPredispOR",
         "PUB_PriceHOEPPredispOR_2025_excerpt.csv",
         "2025",
@@ -235,6 +249,7 @@ def test_build_all_writes_partitioned_tables(data_dir: Path) -> None:
     assert counts["hoep"] == 24
     assert counts["predisp_ozp"] == 24
     assert (counts["adequacy_fcst"], counts["da_totals"], counts["vg_fcst"]) == (24, 24, 48)
+    assert (counts["gen_by_fuel"], counts["intertie"]) == (72, 24)
     parts = sorted(p.parent.name for p in (data_dir / "silver" / "da_ozp").rglob("*.parquet"))
     assert parts == ["month=2025-11", "month=2026-09", "month=2026-10"]
     back = pd.read_parquet(data_dir / "silver" / "demand")

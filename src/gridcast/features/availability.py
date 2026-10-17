@@ -42,6 +42,8 @@ class AvailabilityConfig(_Rule):
     rt_ozp_gridstatus: AfterEndRule
     demand_ieso: EstTimeRule
     hoep_ieso: EstTimeRule
+    gen_month_ieso: EstTimeRule
+    intertie_ieso: EstTimeRule
 
 
 def load_availability_config(path: Path | None = None) -> AvailabilityConfig:

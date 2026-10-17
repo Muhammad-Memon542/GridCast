@@ -131,6 +131,42 @@ HOEP = pa.DataFrameSchema(
     name="hoep",
 )
 
+GEN_BY_FUEL = pa.DataFrameSchema(
+    {
+        "ts_utc": _ts(),
+        **DELIVERY,
+        "fuel": pa.Column(
+            checks=pa.Check.isin(
+                ["biofuel", "gas", "hydro", "nuclear", "other", "solar", "wind", "storage"]
+            )
+        ),
+        "output_mw": pa.Column("float64", nullable=True),
+        "capability_mw": pa.Column("float64", nullable=True),
+        "available_capacity_mw": pa.Column("float64", nullable=True),
+        "forecast_mw": pa.Column("float64", nullable=True),
+        "available_at_utc": _ts(),
+        "source_sha256": SHA,
+    },
+    strict=True,
+    unique=["ts_utc", "fuel"],
+    name="gen_by_fuel",
+)
+
+INTERTIE = pa.DataFrameSchema(
+    {
+        "ts_utc": _ts(),
+        **DELIVERY,
+        "imports_sched_mw": pa.Column("float64", nullable=True),
+        "exports_sched_mw": pa.Column("float64", nullable=True),
+        "total_flow_mw": pa.Column("float64", nullable=True),
+        "available_at_utc": _ts(),
+        "source_sha256": SHA,
+    },
+    strict=True,
+    unique=["ts_utc"],
+    name="intertie",
+)
+
 WEATHER_VARS = [
     "temperature_2m",
     "dew_point_2m",
@@ -200,6 +236,8 @@ SCHEMAS = {
         DEMAND,
         HOEP,
         WEATHER_FCST,
+        GEN_BY_FUEL,
+        INTERTIE,
         *_flat_schemas(),
     )
 }

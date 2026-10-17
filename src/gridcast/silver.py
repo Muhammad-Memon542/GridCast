@@ -27,7 +27,7 @@ from gridcast.features.availability import (
     local_time_rule,
 )
 from gridcast.ingest.weather import WeatherConfig, load_weather_config
-from gridcast.parse.ieso_csv import parse_demand, parse_hoep
+from gridcast.parse.ieso_csv import parse_demand, parse_gen_month, parse_hoep, parse_intertie_year
 from gridcast.parse.ieso_flatten import ADEQUACY_SERIES, DA_TOTALS_SERIES, VG_SERIES, wide_series
 from gridcast.parse.ieso_xml import parse_da_ozp, parse_predisp_ozp, parse_rt_ozp
 from gridcast.quality.schemas import SCHEMAS, WEATHER_VARS
@@ -43,6 +43,8 @@ TS_COLUMN = {
     "demand": "ts_utc",
     "hoep": "ts_utc",
     "weather_fcst": "valid_ts_utc",
+    "gen_by_fuel": "ts_utc",
+    "intertie": "ts_utc",
     "adequacy_fcst": "target_ts_utc",
     "vg_fcst": "target_ts_utc",
     "da_totals": "target_ts_utc",
@@ -253,8 +255,9 @@ def _yearly_csv(
         return _finish([], name)
     frame["ts_utc"] = he_to_ts_utc(frame["delivery_date"], frame["hour_ending"])
     frame["available_at_utc"] = est_time_rule(frame["delivery_date"], avail_rule)  # type: ignore[arg-type]
-    # Overlapping yearly files (a year's final file plus the current one) keep the newest.
-    frame = frame.drop_duplicates("ts_utc", keep="last")
+    # Overlapping files (a period's final file plus the current one) keep the newest.
+    keys = ["ts_utc", "fuel"] if "fuel" in frame else ["ts_utc"]
+    frame = frame.drop_duplicates(keys, keep="last")
     return _finish([frame], name)
 
 
@@ -264,6 +267,18 @@ def build_demand(data_dir: Path, avail: AvailabilityConfig) -> pd.DataFrame:
 
 def build_hoep(data_dir: Path, avail: AvailabilityConfig) -> pd.DataFrame:
     return _yearly_csv(data_dir, "PriceHOEPPredispOR", parse_hoep, avail.hoep_ieso, "hoep")
+
+
+def build_gen_by_fuel(data_dir: Path, avail: AvailabilityConfig) -> pd.DataFrame:
+    return _yearly_csv(
+        data_dir, "GenOutputCapabilityMonth", parse_gen_month, avail.gen_month_ieso, "gen_by_fuel"
+    )
+
+
+def build_intertie(data_dir: Path, avail: AvailabilityConfig) -> pd.DataFrame:
+    return _yearly_csv(
+        data_dir, "IntertieScheduleFlowYear", parse_intertie_year, avail.intertie_ieso, "intertie"
+    )
 
 
 def build_flat_forecast(data_dir: Path, avail: AvailabilityConfig, name: str) -> pd.DataFrame:
@@ -351,7 +366,7 @@ def _finish(frames: list[pd.DataFrame], name: str) -> pd.DataFrame:
             TS_COLUMN[name],
             *[
                 c
-                for c in ("source", "version", "issued_at_utc", "point", "lead_days")
+                for c in ("source", "version", "issued_at_utc", "point", "lead_days", "fuel")
                 if c in frame
             ],
         ]
@@ -389,6 +404,8 @@ def build_all(data_dir: Path) -> dict[str, int]:
         "rt_ozp_5min": build_rt_ozp_5min(data_dir, avail),
         "demand": build_demand(data_dir, avail),
         "hoep": build_hoep(data_dir, avail),
+        "gen_by_fuel": build_gen_by_fuel(data_dir, avail),
+        "intertie": build_intertie(data_dir, avail),
         "weather_fcst": build_weather(data_dir, load_weather_config()),
     }
     tables["rt_ozp_hourly"] = build_rt_ozp_hourly(tables["rt_ozp_5min"])

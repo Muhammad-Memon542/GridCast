@@ -19,4 +19,8 @@ rt_ozp_gridstatus: {minutes_after_end: 60}
 # IESO Demand and HOEP yearly CSVs are regenerated daily (~07:30 EST, with data up to
 # HE1 of the current day, V-05f): day d is complete by 08:00 EST on d+1.
 demand_ieso: {est_time: "08:00", days_after: 1}
+# GenOutputCapabilityMonth is regenerated ~06:00 EST with data to the end of the previous
+# day; IntertieScheduleFlowYear ~08:02 EST (observed 2026-10-15..17, listing within 3 min).
+gen_month_ieso: {est_time: "06:30", days_after: 1}
+intertie_ieso: {est_time: "08:30", days_after: 1}
 hoep_ieso: {est_time: "08:00", days_after: 1}
