@@ -48,5 +48,15 @@ sudo install -m 644 scripts/server/systemd/gridcast-collector.timer /etc/systemd
 sudo systemctl daemon-reload
 sudo systemctl enable --now gridcast-collector.timer >/dev/null
 
+echo "== daily live forecast (systemd timer, 09:00 America/Toronto)"
+# Publishing is opt-in: put GRIDCAST_LIVE_FLAGS=--publish in ~/gridcast/.env.live (ADR-005).
+[[ -f .env.live ]] || printf 'GRIDCAST_LIVE_FLAGS=\n' > .env.live
+mkdir -p data/forecast_log
+[[ -d data/forecast_log/.git ]] || git -C data/forecast_log init -q -b forecast-log
+sudo install -m 644 scripts/server/systemd/gridcast-live.service /etc/systemd/system/
+sudo install -m 644 scripts/server/systemd/gridcast-live.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now gridcast-live.timer >/dev/null
+
 echo "== done"
-systemctl list-timers gridcast-collector.timer --no-pager | head -3
+systemctl list-timers 'gridcast-*' --no-pager | head -4

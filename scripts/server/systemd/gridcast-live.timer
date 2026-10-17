@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the GridCast live forecast at 09:00 Toronto time
+
+[Timer]
+OnCalendar=*-*-* 09:00:00 America/Toronto
+Persistent=true
+
+[Install]
+WantedBy=timers.target

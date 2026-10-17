@@ -1,0 +1,13 @@
+[Unit]
+Description=GridCast daily live forecast (09:00 America/Toronto, before the 10:00 EPT DAM close)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=gridcast
+WorkingDirectory=/home/gridcast/gridcast
+EnvironmentFile=-/home/gridcast/gridcast/.env.live
+ExecStart=/home/gridcast/gridcast/.venv/bin/gridcast live --refresh $GRIDCAST_LIVE_FLAGS
+ExecStartPost=/home/gridcast/gridcast/.venv/bin/gridcast scorecard $GRIDCAST_LIVE_FLAGS
+TimeoutStartSec=50min

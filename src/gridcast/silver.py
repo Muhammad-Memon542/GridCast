@@ -10,7 +10,8 @@ import gzip
 import json
 import shutil
 import sqlite3
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
+from functools import partial
 from pathlib import Path
 
 import pandas as pd
@@ -396,21 +397,26 @@ def write_table(frame: pd.DataFrame, data_dir: Path, name: str) -> int:
     return len(frame)
 
 
-def build_all(data_dir: Path) -> dict[str, int]:
+def build_all(data_dir: Path, only: Iterable[str] | None = None) -> dict[str, int]:
+    """Rebuild every silver table, or just ``only`` (the live job needs a subset)."""
     avail = load_availability_config()
-    tables: dict[str, pd.DataFrame] = {
-        "da_ozp": build_da_ozp(data_dir, avail),
-        "predisp_ozp": build_predisp_ozp(data_dir, avail),
-        "rt_ozp_5min": build_rt_ozp_5min(data_dir, avail),
-        "demand": build_demand(data_dir, avail),
-        "hoep": build_hoep(data_dir, avail),
-        "gen_by_fuel": build_gen_by_fuel(data_dir, avail),
-        "intertie": build_intertie(data_dir, avail),
-        "weather_fcst": build_weather(data_dir, load_weather_config()),
+    builders: dict[str, Callable[[], pd.DataFrame]] = {
+        "da_ozp": lambda: build_da_ozp(data_dir, avail),
+        "predisp_ozp": lambda: build_predisp_ozp(data_dir, avail),
+        "rt_ozp_5min": lambda: build_rt_ozp_5min(data_dir, avail),
+        "demand": lambda: build_demand(data_dir, avail),
+        "hoep": lambda: build_hoep(data_dir, avail),
+        "gen_by_fuel": lambda: build_gen_by_fuel(data_dir, avail),
+        "intertie": lambda: build_intertie(data_dir, avail),
+        "weather_fcst": lambda: build_weather(data_dir, load_weather_config()),
+        **{name: partial(build_flat_forecast, data_dir, avail, name) for name in FLAT_REPORTS},
     }
-    tables["rt_ozp_hourly"] = build_rt_ozp_hourly(tables["rt_ozp_5min"])
-    for name in FLAT_REPORTS:
-        tables[name] = build_flat_forecast(data_dir, avail, name)
+    wanted = set(only) if only is not None else set(builders) | {"rt_ozp_hourly"}
+    if "rt_ozp_hourly" in wanted:
+        wanted.add("rt_ozp_5min")
+    tables = {name: build() for name, build in builders.items() if name in wanted}
+    if "rt_ozp_hourly" in wanted:
+        tables["rt_ozp_hourly"] = build_rt_ozp_hourly(tables["rt_ozp_5min"])
     counts = {name: write_table(frame, data_dir, name) for name, frame in tables.items()}
     log.info("silver_built", **counts)
     return counts

@@ -57,6 +57,20 @@ def _parser() -> argparse.ArgumentParser:
     fz.add_argument("--from-study", action="store_true", help="use the best Optuna trial's params")
     fz.add_argument("--calibrate", action="store_true", help="apply rolling CQR (M3-T8)")
     sub.add_parser("validation", help="compare all frozen models on the validation window")
+    live = sub.add_parser(
+        "live", help="issue tomorrow's forecast with the frozen champion (M3-T10)"
+    )
+    live.add_argument("--target-day", type=date.fromisoformat, help="default: tomorrow (Toronto)")
+    live.add_argument(
+        "--refresh", action="store_true", help="collect inputs and rebuild silver first"
+    )
+    live.add_argument("--publish", action="store_true", help="commit and push the forecast log")
+    live.add_argument(
+        "--log-dir", type=Path, help="forecast log checkout (default data/forecast_log)"
+    )
+    sc = sub.add_parser("scorecard", help="score published forecasts against actual prices")
+    sc.add_argument("--log-dir", type=Path)
+    sc.add_argument("--publish", action="store_true")
     rq1 = sub.add_parser("rq1", help="RQ1 break tests (placebo now; the real run after G1)")
     rq1.add_argument("--after-g1", action="store_true", help="read post-go-live prices (ADR-011)")
     dq = sub.add_parser("dq", help="write the data-quality report (M1-T9)")
@@ -187,6 +201,52 @@ def _validation(args: argparse.Namespace, settings: Settings) -> int:  # pragma:
     return 0
 
 
+def _live(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - live run
+    from gridcast.pipelines.live import (
+        LIVE_TABLES,
+        default_target_day,
+        forecast,
+        publish,
+        refresh_inputs,
+        write_log_entry,
+    )
+    from gridcast.silver import build_all
+
+    now = datetime.now(UTC)
+    target = args.target_day or default_target_day(now)
+    log_dir = args.log_dir or settings.data_dir / "forecast_log"
+    if args.refresh:
+        refresh_inputs(settings)
+        build_all(settings.data_dir, only=LIVE_TABLES)
+    entry = forecast(target, data_dir=settings.data_dir)
+    path = write_log_entry(entry, log_dir, now=datetime.now(UTC), data_dir=settings.data_dir)
+    print(path)
+    if args.publish:
+        pushed = publish(
+            log_dir, f"forecast for {target} issued {entry.issued_at_utc:%Y-%m-%dT%H:%MZ}"
+        )
+        print("pushed" if pushed else "committed locally (no remote)")
+    return 0
+
+
+def _scorecard(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - live run
+    import pandas as pd
+
+    from gridcast.backtest.dataset import truth
+    from gridcast.pipelines.live import publish
+    from gridcast.pipelines.scorecard import write_scorecard
+
+    log_dir = args.log_dir or settings.data_dir / "forecast_log"
+    da = pd.read_parquet(settings.data_dir / "silver" / "da_ozp").drop(
+        columns=["month"], errors="ignore"
+    )
+    result = write_scorecard(log_dir, truth(da))
+    print({k: result[k] for k in ("published_days", "scored_days", "last_7_days")})
+    if args.publish:
+        publish(log_dir, f"scorecard {result['generated_at_utc']}")
+    return 0
+
+
 def _rq1(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - data run
     from gridcast.config import load_project_config
     from gridcast.evaluate.rq1 import run, write
@@ -222,6 +282,8 @@ COMMANDS = {
     "rq1": _rq1,
     "freeze": _freeze,
     "validation": _validation,
+    "live": _live,
+    "scorecard": _scorecard,
     "collect": _collect,
     "gaps": _gaps,
     "gs-pull": _gs_pull,

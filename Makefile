@@ -9,7 +9,7 @@ SSH := ssh -i $(HOME)/.ssh/gridcast_deploy $(GRIDCAST_SERVER)
 .DEFAULT_GOAL := help
 .PHONY: help setup check lint format typecheck test hooks \
         collect gaps collector-install collector-uninstall \
-        server-bootstrap server-status server-gaps data-sync \
+        server-bootstrap server-status server-gaps server-history data-sync \
         data dq validation backtest results figures paper serve
 
 help:  ## Show this help
@@ -53,13 +53,16 @@ collector-uninstall:  ## Remove the LaunchAgent (keeps collected data)
 server-bootstrap:  ## Set up / update the production server (idempotent)
 	$(SSH) 'bash -s' < scripts/server/bootstrap.sh
 
-server-status:  ## Collector timer state and latest log lines on the server
-	$(SSH) 'systemctl list-timers gridcast-collector.timer --no-pager | head -2; journalctl -u gridcast-collector.service --no-pager -o cat -n 5'
+server-status:  ## Timers and latest log lines on the server
+	$(SSH) 'systemctl list-timers "gridcast-*" --no-pager | head -3; journalctl -u gridcast-collector.service --no-pager -o cat -n 3; journalctl -u gridcast-live.service --no-pager -o cat -n 3'
 
 server-gaps:  ## Gap report from the production collector
 	$(SSH) 'cd gridcast && .venv/bin/gridcast gaps --days 7'
 
 RSYNC := rsync -az -e "ssh -i $(HOME)/.ssh/gridcast_deploy"
+
+server-history:  ## Copy Grid Status + weather history (bronze) to the server for the live job
+	$(RSYNC) data/bronze/gridstatus data/bronze/_gridstatus.sqlite data/bronze/weather data/bronze/_weather.sqlite $(GRIDCAST_SERVER):gridcast/data/bronze/
 
 data-sync:  ## Mirror the server's IESO bronze + manifest into local data/ (for research)
 	$(SSH) 'sqlite3 gridcast/data/bronze/_manifest.sqlite ".backup gridcast/data/bronze/_manifest.snapshot.sqlite"'
