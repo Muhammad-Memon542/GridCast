@@ -14,6 +14,8 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 import structlog
 
 from gridcast.features.availability import (
@@ -330,11 +332,15 @@ def write_table(frame: pd.DataFrame, data_dir: Path, name: str) -> int:
     shutil.rmtree(tmp, ignore_errors=True)
     tmp.mkdir(parents=True)
     if not frame.empty:
+        # One schema for every partition, so a month whose optional column is all-null
+        # (e.g. ``flag`` before IESO collection) still reads back as the same type.
+        schema = pa.Schema.from_pandas(frame, preserve_index=False)
         month = frame[TS_COLUMN[name]].dt.strftime("%Y-%m")
         for key, part in frame.groupby(month, sort=True):
             out = tmp / f"month={key}"
             out.mkdir()
-            part.to_parquet(out / "part-0.parquet", index=False)
+            table = pa.Table.from_pandas(part, schema=schema, preserve_index=False)
+            pq.write_table(table, out / "part-0.parquet")
     shutil.rmtree(final, ignore_errors=True)
     tmp.rename(final)
     return len(frame)
