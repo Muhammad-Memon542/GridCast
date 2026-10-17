@@ -52,12 +52,12 @@ Backfills, run once: `gridcast gs-pull <dataset> --start 2025-05-01` (Grid Statu
 
 ### Live data collector
 
-Most IESO reports stay online for only 30–90 days, so a collector snapshots them every hour and keeps every published version:
+Most IESO reports stay online for only 30–90 days, so a collector on the production server (ADR-002) snapshots them every hour and keeps every published version:
 
 ```bash
-make collector-install   # macOS LaunchAgent: hourly, only while on AC power
-make gaps                # gap report for the last 7 days
-make collect             # one pass right now
+make server-status   # collector timer and latest runs
+make server-gaps     # gap report (G1 needs 7 gap-free days)
+make collect         # one pass from this machine (fallback: make collector-install)
 ```
 
 ## Repository map
