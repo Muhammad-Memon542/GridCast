@@ -1,5 +1,5 @@
 # Point-in-time feature builder (M1-T8). Lags are in days before the target delivery day D.
-price_lags_days: [1, 2, 7]     # DA OZP for D-1 is published ~13:30 EPT on D-2: known at issue
+price_lags_days: [1, 2, 3, 7]  # DA OZP for D-1 is published ~13:30 EPT on D-2: known at issue
 rt_lags_days: [2]              # RT for D-2 is complete shortly after midnight on D-1
 demand_lags_days: [2]          # demand for D-2 is complete by 08:00 EST on D-1
 gen_lags_days: [2]             # generator output for D-2 is published ~06:00 EST on D-1

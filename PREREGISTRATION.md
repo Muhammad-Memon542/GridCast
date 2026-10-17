@@ -112,6 +112,7 @@ All pre-registered analyses are reported whatever the result, including null and
 Each amendment is dated, gives its reason, and is committed before any model touches test data.
 
 - **2026-10-15, O3.** The owner confirmed ADR-009 option A, so "(pending owner confirmation)" was removed from the O3 row. The definition is unchanged.
+- **2026-10-17, exposure disclosure (no change to the design).** While building and checking the data pipeline (M1), the executor saw data-quality summaries over the whole period (coverage, min/max, counts of negative prices) and a few dozen individual test-window values (parser and feature-builder spot checks). No model has been fit, tuned or scored on test-window outcomes. From now on a code-level test seal blocks test-window scoring until G1 is approved and configs are frozen (ADR-011).
 - **2026-10-15, approval.** The owner approved v1.0 as written, including three operationalisations the executor chose where the plan was silent: the RQ1 windows of 12 months on each side; the RQ3 evaluation window (2026-05-01 onward); and the RQ3 baseline definition (k\* = smallest k with CRPS ≤ naive d−7).
 
 ## 12. Deviations (after the first test-window model run)

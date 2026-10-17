@@ -1,0 +1,19 @@
+# Rolling-origin backtests (M3-T1). Dates are delivery days on the IESO (EST) clock.
+#
+# The validation evaluation window sits inside the pre-registered validation split
+# (2025-05-01 -> 2025-10-31): models are trained on all post-redesign days before each
+# forecast (expanding window from the first DA OZP day) and scored on 2025-07-01 ->
+# 2025-10-31, which leaves at least 59 training days on the first scored day.
+# Test-window runs need the test seal opened against a frozen config (ADR-011).
+
+feature_start: 2025-05-03          # first delivery day with DA OZP
+validation_eval: {start: 2025-07-01, end: 2025-10-31}
+min_train_days: 28
+residual_days: 56                  # rolling out-of-sample residuals for point models
+min_residual_days: 14
+
+models:                            # refit cadence per model
+  naive_d1: {refit_every_days: 1}
+  naive_d7: {refit_every_days: 1}
+  lear: {refit_every_days: 1}
+  lgbm: {refit_every_days: 7}

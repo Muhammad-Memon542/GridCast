@@ -86,6 +86,15 @@ Two logs live here:
   - **Version policy** (`configs/collector.yaml`): `all` for daily reports, because their versions are forecast vintages or intraday updates. `latest` for the hourly real-time reports, whose `_vN` only adds 5-minute intervals within the hour. Un-versioned period files are skipped when versioned siblings exist (V-05a).
 - Consequences: real-time partial-hour snapshots are not kept. That is no loss for research; it only matters for an intraday nowcast, which is out of scope.
 
+### ADR-011 — Start M2/M3 work before G1 formally passes (process note)
+- Status: **Accepted** (owner, 2026-10-17)
+- Context: G1's only open criterion (7 gap-free days of live collection, ~2026-10-23) concerns the live collector, not the historical data that the backtests use. Plan §0 rule 3 says not to start the next milestone before a gate is approved.
+- Decision: start M3 machinery and M2 code now, under a **test seal**:
+  1. Allowed now: backtester, metrics and significance tests (on synthetic data), baselines, tuning on the **validation window only** (2025-05-01 → 2025-10-31), freezing configs in `configs/frozen/`, and M2 code run on old-market data.
+  2. After G1 approval: anything that reads test-window outcomes (≥ 2025-11-01), meaning the RQ1 verdict and test-window backtests, run against frozen configs.
+  3. The seal is enforced in code (`gridcast.backtest.seal`): scoring a test-window day needs `--unseal-test` and committed frozen configs.
+- Disclosure: during M1 data engineering the executor saw aggregate data-quality summaries over the whole period (coverage, min/max, counts of negative prices) and a few dozen individual test-window values while checking parsers and the feature builder. No model, tuning or result has been computed on test-window outcomes. Also recorded in `PREREGISTRATION.md` §11.
+
 ---
 
 ## Verification log

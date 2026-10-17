@@ -45,6 +45,11 @@ def _parser() -> argparse.ArgumentParser:
 
     sub.add_parser("weather", help="fetch Open-Meteo previous-run forecasts into bronze (M1-T6)")
     sub.add_parser("silver", help="rebuild all silver tables from bronze (M1-T4)")
+    bt = sub.add_parser("backtest", help="rolling-origin backtest on the validation window (M3)")
+    bt.add_argument("model")
+    tune = sub.add_parser("tune", help="Optuna tuning on the validation window (M3-T6)")
+    tune.add_argument("model")
+    tune.add_argument("--trials", type=int, default=25)
     dq = sub.add_parser("dq", help="write the data-quality report (M1-T9)")
     dq.add_argument("--out", type=Path, default=Path("docs/results/dq_report.md"))
     return parser
@@ -119,6 +124,25 @@ def _silver(args: argparse.Namespace, settings: Settings) -> int:
     return 0
 
 
+def _backtest(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - long run
+    from gridcast.backtest.runner import run_validation
+
+    out = settings.data_dir / "gold" / "forecasts" / "validation"
+    result, scores = run_validation(args.model, data_dir=settings.data_dir, out_root=out)
+    print(f"{args.model}: {len(result.days)} days, {result.fits} fits")
+    for key, value in scores.as_dict().items():
+        print(f"  {key:>16}: {value:.4f}")
+    return 0
+
+
+def _tune(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - long run
+    from gridcast.backtest.tune import tune
+
+    study = tune(args.model, args.trials, settings.data_dir)
+    print(f"best CRPS {study.best_value:.4f} with {study.best_params}")
+    return 0
+
+
 def _dq(args: argparse.Namespace, settings: Settings) -> int:
     from gridcast.quality.dq import write_report
 
@@ -127,6 +151,8 @@ def _dq(args: argparse.Namespace, settings: Settings) -> int:
 
 
 COMMANDS = {
+    "backtest": _backtest,
+    "tune": _tune,
     "dq": _dq,
     "collect": _collect,
     "gaps": _gaps,

@@ -9,7 +9,7 @@ APP_DIR="$HOME/gridcast"
 echo "== system packages"
 sudo DEBIAN_FRONTEND=noninteractive apt-get update -qq
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-    git sqlite3 python3-venv fail2ban unattended-upgrades >/dev/null
+    git sqlite3 python3-venv libgomp1 fail2ban unattended-upgrades >/dev/null
 sudo systemctl enable --now fail2ban unattended-upgrades >/dev/null
 
 echo "== 2 GB swap (the VM has 1 GB of RAM)"

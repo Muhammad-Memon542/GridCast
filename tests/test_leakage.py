@@ -317,7 +317,7 @@ def test_latest_per_ts_prefers_ieso_then_highest_version() -> None:
 
 def test_repo_feature_config_and_holidays() -> None:
     cfg = load_feature_config(REPO_ROOT / "configs" / "features.yaml")
-    assert cfg.price_lags_days == (1, 2, 7)
+    assert cfg.price_lags_days == (1, 2, 3, 7)
     assert load_feature_config() == cfg
     empty = FeatureInputs(
         da_ozp=pd.DataFrame(

@@ -1,0 +1,8 @@
+# LEAR (Lago et al. 2021), re-implemented with scikit-learn (epftoolbox predates Python 3.12).
+# One LassoLarsIC (AIC) per hour on asinh-normalised prices; the point forecast is the
+# mean over calibration windows. Quantiles come from the backtester's rolling
+# out-of-sample residuals. Windows are shorter than Lago's (56, 84, 1092, 1456 days)
+# because the renewed market only started on 2025-05-01; longer windows use what exists.
+calibration_windows_days: [56, 84, 182, 364]
+price_lags_days: [1, 2, 3, 7]
+exogenous: [wx_temperature_2m, wx_wind_speed_100m, wx_shortwave_radiation, demand_lag2, rt_lag2]
