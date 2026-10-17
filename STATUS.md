@@ -33,4 +33,4 @@ Milestone: **M1 nearly complete** (G1 pending the 7-day collector streak, ~2026-
 
 **Data health:** server collector 0 errors since 2026-10-16; gap-free streak 1 day (2026-10-15). Anomalies in V-12 (2025-05-22 DA day missing).
 
-**Metrics snapshot:** n/a (no models yet).
+**Metrics snapshot (validation, 2025-07-01 → 10-31; not test):** best LightGBM+CQR CRPS 3.819, MAE 10.64 $/MWh, 90% coverage 0.898. Test window sealed.
