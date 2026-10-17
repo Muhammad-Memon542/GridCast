@@ -9,7 +9,7 @@ SSH := ssh -i $(HOME)/.ssh/gridcast_deploy $(GRIDCAST_SERVER)
 .DEFAULT_GOAL := help
 .PHONY: help setup check lint format typecheck test hooks \
         collect gaps collector-install collector-uninstall \
-        server-bootstrap server-status server-gaps \
+        server-bootstrap server-status server-gaps data-sync \
         data dq backtest results figures paper serve
 
 help:  ## Show this help
@@ -58,6 +58,16 @@ server-status:  ## Collector timer state and latest log lines on the server
 
 server-gaps:  ## Gap report from the production collector
 	$(SSH) 'cd gridcast && .venv/bin/gridcast gaps --days 7'
+
+RSYNC := rsync -az -e "ssh -i $(HOME)/.ssh/gridcast_deploy"
+
+data-sync:  ## Mirror the server's IESO bronze + manifest into local data/ (for research)
+	$(SSH) 'sqlite3 gridcast/data/bronze/_manifest.sqlite ".backup gridcast/data/bronze/_manifest.snapshot.sqlite"'
+	mkdir -p data/bronze/ieso
+	$(RSYNC) --delete $(GRIDCAST_SERVER):gridcast/data/bronze/ieso/ data/bronze/ieso/
+	$(RSYNC) $(GRIDCAST_SERVER):gridcast/data/bronze/_manifest.snapshot.sqlite data/bronze/_manifest.sqlite.tmp
+	rm -f data/bronze/_manifest.sqlite-wal data/bronze/_manifest.sqlite-shm
+	mv data/bronze/_manifest.sqlite.tmp data/bronze/_manifest.sqlite
 
 # Targets below arrive with later milestones; they fail loudly until then.
 data dq:  ## (M1) Silver tables / data-quality report

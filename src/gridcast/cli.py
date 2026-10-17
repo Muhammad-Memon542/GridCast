@@ -42,6 +42,8 @@ def _parser() -> argparse.ArgumentParser:
     gs.add_argument("--start", required=True, type=_utc_day, help="UTC date, inclusive")
     gs.add_argument("--end", type=_utc_day, help="UTC date, exclusive (default: today + 2 days)")
     gs.add_argument("--max-quota", type=float, default=0.7, help="max fraction of monthly rows")
+
+    sub.add_parser("weather", help="fetch Open-Meteo previous-run forecasts into bronze (M1-T6)")
     return parser
 
 
@@ -92,7 +94,21 @@ def _gs_pull(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no
     return 0
 
 
-COMMANDS = {"collect": _collect, "gaps": _gaps, "gs-pull": _gs_pull}
+def _weather(args: argparse.Namespace, settings: Settings) -> int:
+    from gridcast.ingest.http import PoliteClient
+    from gridcast.ingest.weather import fetch_weather, load_weather_config
+
+    with PoliteClient(settings.user_agent, min_interval_s=settings.http_min_interval_s) as client:
+        summary = fetch_weather(
+            load_weather_config(),
+            data_dir=settings.data_dir,
+            client=client,
+            today=datetime.now(UTC).date(),
+        )
+    return 1 if summary.errors else 0
+
+
+COMMANDS = {"collect": _collect, "gaps": _gaps, "gs-pull": _gs_pull, "weather": _weather}
 
 
 def main(argv: Sequence[str] | None = None) -> int:

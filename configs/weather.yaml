@@ -1,0 +1,22 @@
+# Weather forecasts as they were known in advance (M1-T6, ADR-003).
+# Open-Meteo Previous Runs API: `<var>_previous_dayN` is the value predicted N x 24 h before
+# the valid time. Availability adds `latency_hours` (decisions.md ADR-003) before a value
+# may be used as a feature. Never use the Historical Forecast API or ERA5 for features.
+
+base_url: https://previous-runs-api.open-meteo.com/v1/forecast
+model: gfs_seamless          # hourly; complete for all variables from 2024-03 (probed 2026-10-17)
+start: 2024-03-01
+chunk_days: 92
+lead_days: [1, 2]
+latency_hours: 8
+variables: [temperature_2m, dew_point_2m, wind_speed_100m, cloud_cover, shortwave_radiation]
+
+points:                      # plan §5.3; weights are set in the feature builder
+  - {name: toronto,      lat: 43.65, lon: -79.38}
+  - {name: ottawa,       lat: 45.42, lon: -75.70}
+  - {name: hamilton,     lat: 43.26, lon: -79.87}
+  - {name: london,       lat: 42.98, lon: -81.25}
+  - {name: kitchener,    lat: 43.45, lon: -80.49}
+  - {name: windsor,      lat: 42.31, lon: -83.04}
+  - {name: chatham_kent, lat: 42.40, lon: -82.19}
+  - {name: sudbury,      lat: 46.49, lon: -80.99}

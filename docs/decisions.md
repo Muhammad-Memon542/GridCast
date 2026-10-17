@@ -41,8 +41,11 @@ Two logs live here:
 - Follow-up: move to GitHub Actions or a small host with object storage when the production host is chosen.
 - **Budget (owner, 2026-10-15):** a small monthly cost for the production host is approved. Recommendation: one small always-on Ubuntu VM (DigitalOcean Toronto, 1–2 GB) running the collector, the daily forecast job, the API and the dashboard in Docker. That also removes the collector's dependency on the Mac being plugged in. The owner creates the account and VM (payment is `[OWNER]`); access is by a dedicated deploy SSH key (`~/.ssh/gridcast_deploy`).
 
-### ADR-003 — Weather API: Previous Runs vs. Single Runs, and which model `[OWNER]`
-- Status: **Open**, needed by week 2.
+### ADR-003 — Weather API: Previous Runs vs. Single Runs, and which model
+- Status: **Accepted (executor, 2026-10-17)**, within the plan's pre-made constraints (§5.3); the owner may overrule. Detail in V-10.
+- Decision: Open-Meteo **Previous Runs API**, model **`gfs_seamless`** (hourly; every variable complete from 2024-03-01), leads N ∈ {1, 2}, five variables at the 8 plan points (`configs/weather.yaml`).
+- **Availability rule, stricter than plan §5.3:** a value `<var>_previous_dayN` at valid time v counts as published at `v − N·24h + 8h`. A feature for issue time t may use it only if that is ≤ t, and silver keeps a value only if that is ≤ its fetch time (this drops Open-Meteo's placeholders; see V-10). At a 09:00 Eastern issue time the rule picks N = 2 for almost every hour of D (N = 1 only for valid times up to ~01:00 Eastern on D). That is slightly staler than the plan's rule, but leak-proof whichever run Open-Meteo actually uses.
+- Not chosen: the Single Runs API (exact runs but many more requests; possible later refinement); ECMWF IFS (possible later ablation); the Historical Forecast API and ERA5 (never for features).
 
 ### ADR-004 — Alert channel `[OWNER]`
 - Status: **Open**, needed by week 12.
@@ -146,6 +149,12 @@ Checked 2026-10-15 by the executor. "Verified" means read in a primary source (a
 - Largest folders: `RealtimeZonalEnergyPrices` (12,728 files, ~20 KB each), `Adequacy3` (5,552, ~170 KB), `RealtimeOntarioZonalPrice` (2,763). `GenOutputCapability` versions grow through the day from ~70 KB to ~900 KB.
 - `DAConstrShadowPrices` is published with a **~6-day lag** (delivery 2026-10-09 created 2026-10-15 08:01 EST) and **skips days** (no files for 09-14, 09-15, 09-17, 10-03). It cannot be an issue-time feature for D, only for D−6 and earlier. It is excluded from the daily gap check.
 - A live smoke test of the collector against this folder (28 files) stored `CreatedAt` within 1 minute of the listing time under the EST rule, consistent with V-03.
+
+### V-10 — Open-Meteo Previous Runs semantics (2026-10-17)
+- Docs: `<var>_previous_dayN` "returns the value predicted 24 hours before valid time", up to day 7. Global models update every 6 h. The docs give no definition of the run and no publication latency.
+- Probe (Toronto, GFS, fetched 2026-10-17 20:19 UTC): for past valid times, day0, day1 and day2 differ as expected. For valid times whose N-day-earlier run had not been published yet, Open-Meteo **returns the latest run instead** (day1 = day0 from 2026-10-18 18:00 UTC; day2 = day0 from 2026-10-18 18:00 UTC). The pattern fits "the most recent run initialised at or before v − N·24h": at 20:19 UTC the 12z run was out and the 18z run was not.
+- Coverage probe: every variable is complete from 2024-03 (`wind_speed_100m` is missing on 2024-02-01). Full fetch 2024-03-01 → 2026-10-19: 8 points × 23,112 hours, no nulls.
+- Consequence: the availability rule in ADR-003. Bronze chunks newer than 3 days are marked incomplete and re-fetched.
 
 ### Deferred `[VERIFY]` items (checked in the milestone that needs them)
 
