@@ -195,3 +195,34 @@ def test_helpers() -> None:
     issue = pd.Timestamp(feats["issue_time_utc"].iloc[0])
     known = targets_known_at(da, issue)
     assert (da.set_index("ts_utc").loc[known.index, "available_at_utc"] <= issue).all()
+
+
+def test_rolling_cqr_repairs_an_overconfident_model() -> None:
+    from gridcast.models.conformal import RollingCQR
+
+    feats, da = synthetic(seed=5)
+
+    class Overconfident(Spy):
+        def predict_quantiles(self, features, *, as_of, target_day, quantiles=QUANTILES):  # type: ignore[no-untyped-def]
+            point = features["da_lag1"].to_numpy()  # error sd ~4.2, intervals far too narrow
+            spread = np.linspace(-0.5, 0.5, len(quantiles))
+            return to_long(features["ts_utc"], point[:, None] + spread[None, :], quantiles)
+
+    cfg = BacktestConfig(eval_start=date(2025, 6, 1), eval_end=date(2025, 7, 20))
+    raw = run_backtest(Overconfident, feats, da, cfg, seal=SEAL)
+    calibrated = run_backtest(
+        Overconfident, feats, da, cfg, seal=SEAL, calibrator=RollingCQR(window_days=28, min_days=7)
+    )
+
+    def coverage90(result) -> float:  # type: ignore[no-untyped-def]
+        wide = to_wide(result.forecasts.rename(columns={"target_ts_utc": "ts_utc"}))
+        wide = wide[
+            wide.index >= pd.Timestamp("2025-06-15", tz="UTC")
+        ]  # after the calibration warm-up
+        y = wide.index.to_series().map(da.set_index("ts_utc")["zonal_price"])
+        return float(((y >= wide[0.05]) & (y <= wide[0.95])).mean())
+
+    assert coverage90(raw) < 0.3
+    assert 0.85 <= coverage90(calibrated) <= 0.96
+    medians = calibrated.forecasts[calibrated.forecasts["quantile"] == 0.5]
+    assert np.allclose(medians["value"], medians["value_raw"])  # CQR never moves the median

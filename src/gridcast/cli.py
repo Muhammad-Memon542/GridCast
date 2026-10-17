@@ -50,6 +50,8 @@ def _parser() -> argparse.ArgumentParser:
     tune = sub.add_parser("tune", help="Optuna tuning on the validation window (M3-T6)")
     tune.add_argument("model")
     tune.add_argument("--trials", type=int, default=25)
+    rq1 = sub.add_parser("rq1", help="RQ1 break tests (placebo now; the real run after G1)")
+    rq1.add_argument("--after-g1", action="store_true", help="read post-go-live prices (ADR-011)")
     dq = sub.add_parser("dq", help="write the data-quality report (M1-T9)")
     dq.add_argument("--out", type=Path, default=Path("docs/results/dq_report.md"))
     return parser
@@ -143,6 +145,19 @@ def _tune(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no co
     return 0
 
 
+def _rq1(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - data run
+    from gridcast.config import load_project_config
+    from gridcast.evaluate.rq1 import run, write
+
+    go_live = load_project_config().market.go_live
+    placebo = not args.after_g1
+    result = run(settings.data_dir, go_live=go_live, placebo=placebo, after_g1=args.after_g1)
+    name = "rq1_placebo.json" if placebo else "rq1.json"
+    print(write(result, Path("docs/results") / name))
+    print({k: v for k, v in result["criteria"].items()}, "supported:", result["supported"])
+    return 0
+
+
 def _dq(args: argparse.Namespace, settings: Settings) -> int:
     from gridcast.quality.dq import write_report
 
@@ -154,6 +169,7 @@ COMMANDS = {
     "backtest": _backtest,
     "tune": _tune,
     "dq": _dq,
+    "rq1": _rq1,
     "collect": _collect,
     "gaps": _gaps,
     "gs-pull": _gs_pull,

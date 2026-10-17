@@ -34,6 +34,7 @@ from gridcast.backtest.dataset import DAY, targets_known_at
 from gridcast.backtest.seal import WindowSeal
 from gridcast.config import REPO_ROOT
 from gridcast.models.base import QUANTILES, EmpiricalResiduals, Forecaster, to_long, to_wide
+from gridcast.models.conformal import RollingCQR
 
 log = structlog.get_logger(__name__)
 
@@ -87,6 +88,7 @@ def run_backtest(
     quantiles: Sequence[float] = QUANTILES,
     out_dir: Path | None = None,
     run_meta: dict[str, object] | None = None,
+    calibrator: RollingCQR | None = None,
 ) -> BacktestResult:
     days = sorted(d for d in features[DAY].unique() if config.eval_start <= d <= config.eval_end)
     for day in days:
@@ -125,8 +127,20 @@ def run_backtest(
         result.predict_seconds += clock.perf_counter() - started
         if getattr(model, "point_only", False):
             long = _residual_quantiles(long, history, da_ozp, issue, config, quantiles, in_sample)
+        raw = long
+        if calibrator is not None and history:
+            # Calibrate against the model's raw past quantiles, never already-calibrated ones.
+            past = pd.concat(history, ignore_index=True)
+            past = past.assign(value=past["value_raw"])
+            long = calibrator.adjust(long, past, targets_known_at(da_ozp, issue), issue, quantiles)
         _check_forecast(long, rows, quantiles)
         record = _record(long, issue, meta, model.name)
+        record["value_raw"] = (
+            to_wide(raw)
+            .stack()
+            .reindex(pd.MultiIndex.from_arrays([record["target_ts_utc"], record["quantile"]]))
+            .to_numpy()
+        )
         if out_dir is not None:
             out_dir.mkdir(parents=True, exist_ok=True)
             record.to_parquet(out_dir / f"day={day}.parquet", index=False)

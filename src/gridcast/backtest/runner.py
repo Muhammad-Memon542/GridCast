@@ -25,6 +25,7 @@ from gridcast.config import Settings, load_project_config, load_yaml
 from gridcast.evaluate.metrics import Scores, score
 from gridcast.features.builder import FeatureInputs, load_feature_config
 from gridcast.models.base import Forecaster, to_wide
+from gridcast.models.conformal import RollingCQR
 from gridcast.models.naive import NaiveLag
 
 FEATURE_TABLES = ("da_ozp", "rt_ozp_hourly", "demand", "weather_fcst", "gen_by_fuel", "intertie")
@@ -139,6 +140,7 @@ def run_validation(
     data_dir: Path | None = None,
     params: dict[str, dict[str, Any]] | None = None,
     out_root: Path | None = None,
+    calibrate: bool = False,
 ) -> tuple[BacktestResult, Scores]:
     """Backtest one model over the validation evaluation window (the test window stays sealed)."""
     settings = Settings()
@@ -160,6 +162,7 @@ def run_validation(
     )
     run_payload: dict[str, object] = {
         "model": model_name,
+        "calibrated": calibrate,
         "params": (params or {}).get(model_name, {}),
         "backtest": bt.__dict__,
     }
@@ -182,5 +185,8 @@ def run_validation(
         quantiles=project.forecast.quantiles,
         out_dir=out_dir,
         run_meta=meta,
+        calibrator=RollingCQR(window_days=cfg.residual_days, min_days=cfg.min_residual_days)
+        if calibrate
+        else None,
     )
     return result, evaluate(result, features, da_ozp, validation_spike_threshold(da_ozp, cfg))
