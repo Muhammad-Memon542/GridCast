@@ -96,3 +96,37 @@ def test_spike_counts_and_volatility() -> None:
     assert counts.sum() == 10
     vol = rolling_volatility(daily_stats(hourly)["mean"], window=5)
     assert vol.isna().sum() == 4
+
+
+def test_placebo_calibration_math() -> None:
+    from gridcast.evaluate.rq1 import (
+        STATISTICS,
+        calibrated_p_values,
+        calibrated_verdict,
+        placebo_dates,
+    )
+
+    dates = placebo_dates()
+    assert (len(dates), dates[0], dates[-1]) == (48, date(2020, 5, 1), date(2024, 4, 1))
+    placebos = pd.DataFrame({k: np.arange(48, dtype=float) for k in STATISTICS})
+    p = calibrated_p_values({k: 100.0 for k in STATISTICS}, placebos)
+    assert all(v == pytest.approx(1 / 49) for v in p.values())  # beats every placebo
+    p_mid = calibrated_p_values({k: 23.5 for k in STATISTICS}, placebos)
+    assert p_mid["ks_d"] == pytest.approx(25 / 49)  # 24 placebos >= 23.5
+    assert calibrated_verdict(p)
+    assert not calibrated_verdict(p_mid)
+
+
+def test_statistics_on_a_synthetic_hourly_series() -> None:
+    from gridcast.evaluate.rq1 import statistics
+
+    rng = np.random.default_rng(9)
+    ts = pd.date_range("2024-05-01 05:00", "2026-05-01 04:00", freq="h", tz="UTC")
+    shift = np.where(ts >= pd.Timestamp("2025-05-01 05:00", tz="UTC"), 20.0, 0.0)
+    hourly = pd.DataFrame(
+        {"ts_utc": ts.astype("datetime64[us, UTC]"), "price": rng.gamma(4, 10, len(ts)) + shift}
+    )
+    s = statistics(hourly, BREAK)
+    assert s["chow_f_mean"] > 100
+    assert 0 < s["ks_d"] < 1
+    assert s["abs_log_tail_ratio"] >= 0

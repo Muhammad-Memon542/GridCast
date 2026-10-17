@@ -196,7 +196,15 @@ def _rq1(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cov
     result = run(settings.data_dir, go_live=go_live, placebo=placebo, after_g1=args.after_g1)
     name = "rq1_placebo.json" if placebo else "rq1.json"
     print(write(result, Path("docs/results") / name))
-    print({k: v for k, v in result["criteria"].items()}, "supported:", result["supported"])
+    if placebo:
+        print("placebo (registered rule):", result["criteria"], "supported:", result["supported"])
+        print(
+            "placebo reference 50/90/95%:",
+            result["placebo_reference"]["placebo_quantiles_50_90_95"],
+        )
+    else:
+        print("registered rule supported:", result["registered_rule"]["supported"])
+        print("calibrated:", result["calibrated"])
     return 0
 
 

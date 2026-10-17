@@ -86,16 +86,87 @@ def run(data_dir: Path, *, go_live: date, placebo: bool, after_g1: bool = False)
         return pd.read_parquet(data_dir / "silver" / name).drop(columns=["month"], errors="ignore")
 
     series = comparable_series(read("hoep"), read("rt_ozp_hourly"), go_live)
+    old = series[series["regime"] == "old"]
+    distribution = placebo_distribution(old)
+    reference = {
+        "placebo_dates": [str(d) for d in distribution.index],
+        "placebo_quantiles_50_90_95": {
+            k: distribution[k].quantile([0.5, 0.9, 0.95]).round(4).tolist() for k in STATISTICS
+        },
+    }
     if placebo:
-        series = series[series["regime"] == "old"]
+        one_year = date(go_live.year - 1, go_live.month, go_live.day)
+        records = distribution.reset_index().astype({"placebo": str}).to_dict("records")
         return {
             "kind": "placebo",
-            **analyse(series, date(go_live.year - 1, go_live.month, go_live.day)),
+            **analyse(old, one_year),
+            "placebo_reference": reference,
+            "placebo_statistics": records,
         }
-    return {"kind": "rq1", **analyse(series, go_live)}
+    observed = statistics(series, go_live)
+    p_values = calibrated_p_values(observed, distribution)
+    return {
+        "kind": "rq1",
+        "registered_rule": analyse(series, go_live),
+        "calibrated": {
+            "observed": observed,
+            "p_values": p_values,
+            "supported": calibrated_verdict(p_values),
+        },
+        "placebo_reference": reference,
+    }
 
 
 def write(result: dict[str, Any], out: Path) -> Path:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=1, default=str) + "\n", encoding="utf-8")
     return out
+
+
+# ------------------------------------------------- placebo calibration (ADR-012)
+
+STATISTICS = ("chow_f_mean", "chow_f_log_sd", "ks_d", "abs_log_tail_ratio")
+
+
+def statistics(series: pd.DataFrame, break_at: date, months: int = 12) -> dict[str, float]:
+    """The four calibrated statistics (no bootstrap: point estimates only)."""
+    from gridcast.evaluate.regime import hill
+
+    start = (pd.Timestamp(break_at) - pd.DateOffset(months=months)).date()
+    end = (pd.Timestamp(break_at) + pd.DateOffset(months=months)).date() - timedelta(days=1)
+    day = series["ts_utc"].dt.tz_convert("Etc/GMT+5").dt.date
+    window = series[(day >= start) & (day <= end)]
+    wday = window["ts_utc"].dt.tz_convert("Etc/GMT+5").dt.date
+    before, after = window[wday < break_at]["price"], window[wday >= break_at]["price"]
+    daily = daily_stats(window)
+
+    def alpha(x: pd.Series) -> float:
+        positive = x[x > 0].to_numpy()
+        return hill(positive, max(int(0.05 * positive.size), 2))
+
+    return {
+        "chow_f_mean": chow_test(daily["mean"], break_at).statistic,
+        "chow_f_log_sd": chow_test(daily["log_sd"], break_at).statistic,
+        "ks_d": ks_test(before, after).statistic,
+        "abs_log_tail_ratio": float(abs(np.log(alpha(after) / alpha(before)))),
+    }
+
+
+def placebo_dates(first: date = date(2020, 5, 1), last: date = date(2024, 4, 1)) -> list[date]:
+    return [d.date() for d in pd.date_range(first, last, freq="MS")]
+
+
+def placebo_distribution(old_series: pd.DataFrame, dates: list[date] | None = None) -> pd.DataFrame:
+    rows = [{"placebo": d, **statistics(old_series, d)} for d in (dates or placebo_dates())]
+    return pd.DataFrame(rows).set_index("placebo")
+
+
+def calibrated_p_values(observed: dict[str, float], placebos: pd.DataFrame) -> dict[str, float]:
+    """(1 + #placebos >= observed) / (1 + #placebos), per statistic."""
+    n = len(placebos)
+    return {k: float((1 + int((placebos[k] >= observed[k]).sum())) / (1 + n)) for k in STATISTICS}
+
+
+def calibrated_verdict(p_values: dict[str, float]) -> bool:
+    """Break supported if both the level and the volatility statistics beat the placebos."""
+    return p_values["chow_f_mean"] < ALPHA and p_values["chow_f_log_sd"] < ALPHA

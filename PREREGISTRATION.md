@@ -112,6 +112,12 @@ All pre-registered analyses are reported whatever the result, including null and
 Each amendment is dated, gives its reason, and is committed before any model touches test data.
 
 - **2026-10-15, O3.** The owner confirmed ADR-009 option A, so "(pending owner confirmation)" was removed from the O3 row. The definition is unchanged.
+- **2026-10-17, RQ1 placebo calibration (owner-approved; before any real RQ1 run).** An old-market placebo check (`docs/results/rq1_placebo.md`) showed that the registered RQ1 rule declares a break at 1 of 5 dates where nothing changed. Amendment: the registered rule is still computed and reported unchanged, but the **headline RQ1 verdict is placebo-calibrated**:
+  - Placebo dates are the 1st of every month from 2020-05-01 to 2024-04-01 (48 dates). Each is analysed with the same 12-month windows, entirely inside the old market (HOEP).
+  - Statistics, at go-live and at each placebo: Chow F for the daily mean; Chow F for the daily log s.d.; KS distance between hourly prices; |log(α_after / α_before)| for the Hill tail index.
+  - Calibrated p-value: (1 + number of placebos with a statistic ≥ the go-live one) / (1 + 48).
+  - **Break supported** if the calibrated p < 0.05 for both the daily-mean and the daily-log-s.d. statistics. KS and tail statistics are reported with their calibrated p-values as secondary evidence.
+  - Caveats: placebo windows overlap, so the reference distribution is dependent and descriptive. The go-live comparison spans a change of quantity (HOEP to hourly-averaged RT OZP, §8) that the placebos do not.
 - **2026-10-17, exposure disclosure (no change to the design).** While building and checking the data pipeline (M1), the executor saw data-quality summaries over the whole period (coverage, min/max, counts of negative prices) and a few dozen individual test-window values (parser and feature-builder spot checks). No model has been fit, tuned or scored on test-window outcomes. From now on a code-level test seal blocks test-window scoring until G1 is approved and configs are frozen (ADR-011).
 - **2026-10-15, approval.** The owner approved v1.0 as written, including three operationalisations the executor chose where the plan was silent: the RQ1 windows of 12 months on each side; the RQ3 evaluation window (2026-05-01 onward); and the RQ3 baseline definition (k\* = smallest k with CRPS ≤ naive d−7).
 

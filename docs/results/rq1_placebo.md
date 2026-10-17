@@ -17,7 +17,17 @@ Generated from `docs/results/rq1_placebo.json` and `docs/results/rq1_placebo_dat
 
 **Finding.** Year-on-year price drift alone makes the Chow-on-mean and KS tests reject at every placebo date. The composite rule declared a break at 1 of 5 placebo dates (2022, during the gas-price surge): a ~20% false-positive rate against a nominal 5%. The rule cannot by itself separate the redesign from ordinary year-to-year change.
 
-**Options (owner decision before the real RQ1 run; see STATUS):**
+**Decision (owner, 2026-10-17): option B.** The headline RQ1 verdict is placebo-calibrated (ADR-012; specification in `PREREGISTRATION.md` §11). The registered rule is still reported unchanged.
 
-1. **Keep the rule as registered** and report the placebo result alongside it as a limitation.
-2. **Amend before the real run (recommended):** keep reporting the registered rule unchanged, but make the headline RQ1 verdict *placebo-calibrated*. Compute each test statistic at go-live and at monthly placebo dates across the old market (2020-05 → 2024-04, ~48 dates). The redesign counts as a break only if its statistics exceed the 95th percentile of the placebo distribution (a permutation-in-time test). This uses no test-window information and is a standard robustness design.
+## Placebo reference distribution (48 monthly dates, 2020-05 → 2024-04)
+
+Computed by `gridcast rq1` from old-market data only; details in `docs/results/rq1_placebo.json`. The go-live statistic must exceed all but at most one placebo (calibrated p < 0.05) for both the level and the volatility statistics.
+
+| Statistic | Median | 90th pct | 95th pct |
+| --- | --- | --- | --- |
+| Chow F, daily mean | 61.2 | 275.8 | 322.2 |
+| Chow F, daily log s.d. | 59.1 | 131.3 | 162.7 |
+| KS distance (hourly) | 0.289 | 0.485 | 0.521 |
+| abs(log tail-index ratio) | 0.224 | 0.449 | 0.493 |
+
+The real RQ1 run (`gridcast rq1 --after-g1`) waits for G1 approval (ADR-011).

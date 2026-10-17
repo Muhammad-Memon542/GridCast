@@ -95,6 +95,12 @@ Two logs live here:
   3. The seal is enforced in code (`gridcast.backtest.seal`): scoring a test-window day needs `--unseal-test` and committed frozen configs.
 - Disclosure: during M1 data engineering the executor saw aggregate data-quality summaries over the whole period (coverage, min/max, counts of negative prices) and a few dozen individual test-window values while checking parsers and the feature builder. No model, tuning or result has been computed on test-window outcomes. Also recorded in `PREREGISTRATION.md` §11.
 
+### ADR-012 — RQ1 headline verdict is placebo-calibrated
+- Status: **Accepted** (owner, 2026-10-17), recorded as a pre-registration amendment before any real RQ1 run.
+- Context: `docs/results/rq1_placebo.md`. The registered rule fires at 1 of 5 old-market placebo dates, because year-on-year drift alone makes the Chow and KS tests reject.
+- Decision: option B. Report the registered rule unchanged; the headline verdict compares go-live statistics with 48 monthly placebo dates (2020-05 → 2024-04). Full specification in `PREREGISTRATION.md` §11.
+- Consequences: `gridcast rq1` computes the placebo distribution (old market only, runnable now) and, after G1, the go-live statistics and calibrated p-values.
+
 ---
 
 ## Verification log
