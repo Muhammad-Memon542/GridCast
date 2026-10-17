@@ -164,6 +164,18 @@ Checked 2026-10-15 by the executor. "Verified" means read in a primary source (a
 - **IESO's Demand file has no HE1 for 2025-05-01** (go-live day), the 23 rows noted in V-08.
 - **Availability of IESO files** = max(`CreatedAt`, listing time + 1 min), because `CreatedAt` precedes publication by 1–2 minutes (V-03). This is slightly more conservative than plan §7.3.
 
+### V-12 — Data-quality triage (first `make dq`, 2026-10-17)
+
+| Anomaly | Evidence | Disposition |
+| --- | --- | --- |
+| DA OZP has no prices for delivery 2025-05-22 (24 h) | `dq_report.md` coverage; no public IESO notice found | Possibly a DAM failure day. **Left missing, never imputed**; that day is excluded from DA scoring. Ask IESO if a data request is sent |
+| RT OZP hourly: 3 missing hours (2025-10-24, 2025-11-10, 2026-01-28) and 19 hours built from fewer than 12 intervals | `dq_report.md` | Hourly means need all 12 intervals for scoring; features tolerate gaps (NaN). Keep as is |
+| IESO vs Grid Status RT 5-min: 227 of 27,042 overlapping intervals differ (max 37.56 $/MWh) | `dq_report.md` | IESO's final file is authoritative; `latest` views prefer IESO. Grid Status-only history may carry a few superseded values (limitation) |
+| IESO vs Grid Status DA: 0 of 2,251 differ | `dq_report.md` | Grid Status DA history accepted as-is |
+| DA versions: of 94 collected delivery days, 1 has several versions on site, all identical | `dq_report.md`, V-11 | Earlier versions were purged before collection. Live collection captures them from now on |
+| Demand 2025-05-01 HE1 absent | V-08 | IESO's own file. Left missing |
+| DA OZP never negative (min 0.00); RT reached the −$100 floor 5 times, 512 negative intervals | `dq_report.md` | Real behaviour, not an error. Note for EDA (M2) |
+
 ### Deferred `[VERIFY]` items (checked in the milestone that needs them)
 
 | Item | Plan ref | When |

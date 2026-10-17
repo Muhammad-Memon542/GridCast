@@ -40,6 +40,18 @@ COVERAGE = {
         SINCE_2019,
         "SELECT count(*) - count(DISTINCT ts_utc) FROM hoep",
     ),
+    "Generator output, nuclear (2019-05+)": (
+        "gen_by_fuel",
+        "ts_utc",
+        "fuel = 'nuclear'",
+        "SELECT count(*) - count(DISTINCT (ts_utc, fuel)) FROM gen_by_fuel",
+    ),
+    "Intertie totals (2019+)": (
+        "intertie",
+        "ts_utc",
+        SINCE_2019,
+        "SELECT count(*) - count(DISTINCT ts_utc) FROM intertie",
+    ),
     "Pre-dispatch OZP (targets with a vintage)": (
         "predisp_ozp",
         "target_ts_utc",

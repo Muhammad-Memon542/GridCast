@@ -6,18 +6,18 @@ One row per dataset in plan §6. Earliest-available dates and the ADR-001 recomm
 
 | ID | Dataset | Source / URL | Format | On-site retention | Licence / terms | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| D01 | Day-ahead OZP | `reports-public.ieso.ca/public/DAHourlyOntarioZonalPrice/` | XML, 1 file per delivery date, `_vN` versions; the base file is an alias of the latest | ~90 days | IESO terms (to check in M1-T1) | Format verified |
-| D02 | Real-time OZP | `…/RealtimeOntarioZonalPrice/` | XML, **1 file per delivery hour** (`YYYYMMDDHH`), 12 five-minute intervals, `_vN` grows per interval | ~90 days | IESO | Format verified |
-| D03 | Pre-dispatch OZP | `…/PredispHourlyOntarioZonalPrice/` | XML, 1 file per delivery date, ~27 hourly vintages from ~20:19 EST D−1 | ~30 days of all vintages, then only base + final to ~90 days | IESO | Format verified |
-| D04 | HOEP | `…/PriceHOEPPredispOR/` | CSV | 2002 → May 2025 | IESO | M1-T1 |
-| D05 | Demand | `…/Demand/` | Yearly CSV with 3 `\\` header lines, `Date,Hour,Market Demand,Ontario Demand` | 2002 → present | IESO | Format verified |
-| D06 | Adequacy | `…/Adequacy3/` | XML | ~90 days | IESO | M1-T1 |
-| D07 | Generator output & capability | `…/GenOutputCapability/`, `…/GenOutputCapabilityMonth/` | XML / monthly CSV | Monthly CSV from May 2019 | IESO | M1-T1 |
-| D08 | Wind/solar forecast | `…/VGForecastSummary/` | XML | ~30 days | IESO | M1-T1 |
-| D09 | Intertie flows | `…/IntertieScheduleFlow/`, `…/IntertieScheduleFlowYear/` | XML / yearly CSV | Yearly CSV from 2018 | IESO | M1-T1 |
-| D10 | Virtual zonal prices | `…/DAHourlyZonal/`, `…/RealtimeZonalEnergyPrices/` | XML | ~90 days | IESO | M1-T1 |
+| D01 | Day-ahead OZP | `reports-public.ieso.ca/public/DAHourlyOntarioZonalPrice/` | XML, 1 file per delivery date, `_vN` versions; the base file is an alias of the latest | ~90 days | IESO terms (to check in M7-T2) | **Silver** `da_ozp` (+ Grid Status history) |
+| D02 | Real-time OZP | `…/RealtimeOntarioZonalPrice/` | XML, **1 file per delivery hour** (`YYYYMMDDHH`), 12 five-minute intervals, `_vN` grows per interval | ~90 days | IESO | **Silver** `rt_ozp_5min`, `rt_ozp_hourly` |
+| D03 | Pre-dispatch OZP | `…/PredispHourlyOntarioZonalPrice/` | XML, 1 file per delivery date, ~27 hourly vintages from ~20:19 EST D−1 | ~30 days of all vintages, then only base + final to ~90 days | IESO | **Silver** `predisp_ozp` |
+| D04 | HOEP | `…/PriceHOEPPredispOR/` | CSV | 2002 → May 2025 | IESO | **Silver** `hoep` |
+| D05 | Demand | `…/Demand/` | Yearly CSV with 3 `\\` header lines, `Date,Hour,Market Demand,Ontario Demand` | 2002 → present | IESO | **Silver** `demand` |
+| D06 | Adequacy | `…/Adequacy3/` | XML (nested; flattened) | ~90 days | IESO | **Silver** `adequacy_fcst`; `da_totals` from DATotals |
+| D07 | Generator output & capability | `…/GenOutputCapability/`, `…/GenOutputCapabilityMonth/` | XML / monthly CSV | Monthly CSV from May 2019 | IESO | **Silver** `gen_by_fuel` (CSV) |
+| D08 | Wind/solar forecast | `…/VGForecastSummary/` | XML (nested; flattened) | ~30 days | IESO | **Silver** `vg_fcst` |
+| D09 | Intertie flows | `…/IntertieScheduleFlow/`, `…/IntertieScheduleFlowYear/` | XML / yearly CSV | Yearly CSV from 2018 | IESO | **Silver** `intertie` (CSV) |
+| D10 | Virtual zonal prices | `…/DAHourlyZonal/`, `…/RealtimeZonalEnergyPrices/` | XML | ~90 days | IESO | Collecting (bronze); stretch |
 | D11 | DA shadow prices | `…/DAConstrShadowPrices/` | XML; published **~6 days after** delivery and skips some days (V-09) | ~40 days | IESO | Collecting |
-| D12 | Weather forecasts | Open-Meteo Previous Runs API | JSON | Most models from Jan 2024 | Free for non-commercial use | ADR-003 |
+| D12 | Weather forecasts | Open-Meteo Previous Runs API | JSON | Most models from Jan 2024 | Free for non-commercial use | **Silver** `weather_fcst` (ADR-003) |
 | D13 | Weather actuals | Open-Meteo ERA5 archive | JSON | 1940 → | Free for non-commercial use | Analysis only |
 | D14 | Holidays | `holidays` Python package (Ontario) | Python | n/a | MIT | M1 |
 | D15 | Gas price | `[OWNER]` picks the source | — | — | — | ADR-006 |

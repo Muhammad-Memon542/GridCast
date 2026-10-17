@@ -40,6 +40,16 @@ make help    # every target; data/backtest/paper targets arrive in later milesto
 
 Copy `.env.example` to `.env` for local settings. `.env` is git-ignored.
 
+### Data pipeline
+
+```bash
+make data-sync   # mirror the production collector's IESO files to data/bronze
+make data        # rebuild all silver tables from bronze (~1 min)
+make dq          # data-quality report -> docs/results/dq_report.md
+```
+
+Backfills, run once: `gridcast gs-pull <dataset> --start 2025-05-01` (Grid Status, ADR-001), `gridcast collect --config configs/backfill_ieso.yaml --force` (IESO history), `gridcast weather` (Open-Meteo, ADR-003).
+
 ### Live data collector
 
 Most IESO reports stay online for only 30–90 days, so a collector snapshots them every hour and keeps every published version:
@@ -66,5 +76,5 @@ make collect             # one pass right now
 
 - **TimesFM-3** weights are under a non-commercial licence. They are used for the research benchmark only, never in production serving.
 - **Open-Meteo** is free for non-commercial use.
-- Data from the hosted backfill API (ADR-001) is likely not redistributable and is excluded from any published dataset.
+- Price history before live collection is **data provided by [Grid Status](https://www.gridstatus.io/)** (ADR-001). Their terms forbid republishing it, so it is excluded from any published dataset.
 - The licence for this repository's code is still to be chosen `[OWNER]`.
