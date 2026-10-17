@@ -120,6 +120,11 @@ def run_backtest(
             last_fit = day
             in_sample = getattr(model, "in_sample_residuals", None)
 
+        observe = getattr(model, "observe", None)
+        if observe is not None and last_fit != day:
+            # Sequence models need the latest published prices, not just the training set.
+            past_x, past_y = _training_set(features, da_ozp, day, issue, config)
+            observe(past_x, past_y)
         started = clock.perf_counter()
         long = model.predict_quantiles(
             rows, as_of=issue.to_pydatetime(), target_day=day, quantiles=quantiles

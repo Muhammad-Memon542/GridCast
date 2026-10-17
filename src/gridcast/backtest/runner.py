@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Callable
 from datetime import date
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -56,34 +57,50 @@ def load_backtest_config(path: Path | None = None) -> BacktestFile:
     return BacktestFile.model_validate(load_yaml(path or Settings().configs_dir / "backtest.yaml"))
 
 
+def _build(name: str, params: dict[str, dict[str, Any]]) -> Forecaster:
+    """Import a model's library only when it is built: LightGBM's and PyTorch's OpenMP
+    runtimes crash when both are loaded in one process on macOS (V-14)."""
+    if name in ("naive_d1", "naive_d7"):
+        return NaiveLag(int(name[-1]))
+    if name == "lear":
+        from gridcast.models.lear import LEAR
+
+        return LEAR(**params.get("lear", {}))
+    if name == "sarimax":
+        from gridcast.models.sarimax import SARIMAX24
+
+        return SARIMAX24(**params.get("sarimax", {}))
+    if name == "lgbm":
+        from gridcast.models.lgbm import LGBMQuantile
+
+        return LGBMQuantile(**params.get("lgbm", {}))
+    arch, _, seed = name.partition("_s")
+    architectures = {"nhits": "NHITS", "patchtst": "PatchTST", "tft": "TFT"}
+    if arch in architectures and seed.isdigit():
+        from gridcast.models.neural import NeuralQuantile
+
+        return NeuralQuantile(
+            architectures[arch], seed=int(seed), **params.get(name, params.get(arch, {}))
+        )
+    raise KeyError(name)
+
+
+MODEL_NAMES = (
+    "naive_d1",
+    "naive_d7",
+    "lear",
+    "sarimax",
+    "lgbm",
+    *[f"{a}_s{s}" for a in ("nhits", "patchtst", "tft") for s in (0, 1, 2)],
+)
+
+
 def model_registry(
     params: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Callable[[], Forecaster]]:
     """Model name -> factory. Optional per-model keyword overrides (used by tuning)."""
     params = params or {}
-    registry: dict[str, Callable[[], Forecaster]] = {
-        "naive_d1": lambda: NaiveLag(1),
-        "naive_d7": lambda: NaiveLag(7),
-    }
-    try:
-        from gridcast.models.lear import LEAR
-
-        registry["lear"] = lambda: LEAR(**params.get("lear", {}))
-    except ImportError:  # pragma: no cover
-        pass
-    try:
-        from gridcast.models.sarimax import SARIMAX24
-
-        registry["sarimax"] = lambda: SARIMAX24(**params.get("sarimax", {}))
-    except ImportError:  # pragma: no cover
-        pass
-    try:
-        from gridcast.models.lgbm import LGBMQuantile
-
-        registry["lgbm"] = lambda: LGBMQuantile(**params.get("lgbm", {}))
-    except ImportError:  # pragma: no cover
-        pass
-    return registry
+    return {name: partial(_build, name, params) for name in MODEL_NAMES}
 
 
 def load_features(data_dir: Path, last_day: date, cfg: BacktestFile) -> pd.DataFrame:

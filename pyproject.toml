@@ -45,6 +45,9 @@ dev = [
     "ruff>=0.6",
     "types-pyyaml>=6.0",
 ]
+neural = [
+    "neuralforecast>=3.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.13.1,<0.14.0"]
@@ -82,7 +85,7 @@ warn_unreachable = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["pyarrow", "pyarrow.*", "scipy", "scipy.*", "sklearn", "sklearn.*", "statsmodels.*", "ruptures", "arch", "arch.*"]   # no type information
+module = ["neuralforecast", "neuralforecast.*", "torch", "pyarrow", "pyarrow.*", "scipy", "scipy.*", "sklearn", "sklearn.*", "statsmodels.*", "ruptures", "arch", "arch.*"]   # no type information
 ignore_missing_imports = true
 
 [tool.pydantic-mypy]

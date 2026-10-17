@@ -18,3 +18,12 @@ models:                            # refit cadence per model
   lear: {refit_every_days: 1}
   sarimax: {refit_every_days: 1}
   lgbm: {refit_every_days: 7}
+  nhits_s0: {refit_every_days: 7}
+  nhits_s1: {refit_every_days: 7}
+  nhits_s2: {refit_every_days: 7}
+  patchtst_s0: {refit_every_days: 7}
+  patchtst_s1: {refit_every_days: 7}
+  patchtst_s2: {refit_every_days: 7}
+  tft_s0: {refit_every_days: 7}
+  tft_s1: {refit_every_days: 7}
+  tft_s2: {refit_every_days: 7}
