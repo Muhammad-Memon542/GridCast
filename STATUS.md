@@ -22,10 +22,12 @@ Milestone: **M1 nearly complete** (G1 pending the 7-day collector streak, ~2026-
 - Let the collector streak reach 7 gap-free days; then finalise `docs/gates/G1.md`
 - 2026-11-01: pull pre-dispatch vintages from Grid Status (~333k rows) for O3
 - After G1 approval: unseal and run the frozen models on the test window (RQ2); `gridcast rq1 --after-g1`; G2 assessment
-- M3-T7 deep nets (N-HiTS, TFT, PatchTST, DNN) and M3-T10 early live publishing
+- M3-T7 neural tier: validation search running (N-HiTS x3 configs, PatchTST, TFT; then 3 seeds each)
+- M3-T10: daily live job runs at 09:00 on the server from 2026-10-18 (local log only); public once ADR-005 is decided
 
 **Blocked / needs owner**
 - G1 approval (~2026-10-23)
+- ADR-005: where to publish the daily forecast log (recommended: a separate public repo with the server's deploy key)
 
 **Risks changed**
 - R1 (post-redesign history): **resolved** for prices; operator-forecast history is live-only

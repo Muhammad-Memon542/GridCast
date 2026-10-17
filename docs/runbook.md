@@ -17,3 +17,12 @@ Operational notes. The full runbook (report format changes, late data, failed jo
 - Logs: `journalctl -u gridcast-collector.service` on the server.
 - Data: `~/gridcast/data/bronze/` (gzip files plus `_manifest.sqlite`).
 - The macOS LaunchAgent (`make collector-install`) remains as a fallback if the server is down. Don't run both at once.
+
+## Daily live forecast (M3-T10)
+
+- Timer `gridcast-live.timer` runs at **09:00 America/Toronto**. It refreshes inputs, rebuilds the feature tables, forecasts D with the frozen champion (`configs/frozen/lgbm.yaml`) and writes `data/forecast_log/forecasts/YYYY/MM/D.json` (append-only), `latest.json` and `scorecard.md`.
+- Publishing: set `GRIDCAST_LIVE_FLAGS=--publish` in `~/gridcast/.env.live` once ADR-005 is decided. The log is a git checkout; `--publish` commits and pushes it.
+- The job refuses to publish after 10:00 EPT on D-1 (bid window closed); a missed day stays missed. It never rewrites a published day.
+- Check: `make server-status` (last lines of both services); `ssh … 'cat gridcast/data/forecast_log/scorecard.md'`.
+- Backfill history the job trains on: `make server-history` (Grid Status + weather bronze, copied once; the job fetches new weather itself).
+- Manual run for a given day (before 10:00 EPT on D-1): `ssh … 'cd gridcast && .venv/bin/gridcast live --refresh --target-day YYYY-MM-DD'`.

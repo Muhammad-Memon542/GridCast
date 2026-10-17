@@ -51,7 +51,12 @@ Two logs live here:
 - Status: **Open**, needed by week 12.
 
 ### ADR-005 — Public forecast log location `[OWNER]`
-- Status: **Open**, needed by week 8.
+- Status: **Proposed**. The owner decides before the first public forecast (target ~2026-11-01, fast track).
+- Built: the daily job on the server writes an append-only JSON log (one file per target day, never rewritten, refused after 10:00 EPT) plus `scorecard.md`, in a git checkout (`~/gridcast/data/forecast_log`, branch `forecast-log`). Each day is a timestamped commit, so the history is tamper-evident. A server deploy key (`~/.ssh/gridcast_forecast_log`) is ready; pushing is off until `GRIDCAST_LIVE_FLAGS=--publish` is set in `~/gridcast/.env.live`.
+- Options:
+  - **A (recommended): a separate public repo, `GridCast-forecasts`.** The owner creates it empty and adds the server's public key as a deploy key with write access. The key can then only touch that repo.
+  - B: an orphan `forecast-log` branch in the main repo. Simpler, but GitHub deploy keys are repo-wide, so the server could also push to `main`.
+  - C: JSON served from the VM over HTTPS. Not tamper-evident, and needs a domain/TLS.
 
 ### ADR-006 — Gas price source (optional) `[OWNER]`
 - Status: **Open**, needed by week 5.
@@ -197,6 +202,11 @@ Checked 2026-10-15 by the executor. "Verified" means read in a primary source (a
 - **Rolling CQR (M3-T8)** must be fitted on *raw* (pre-calibration) past quantiles. Calibrating on already-calibrated history shrinks the correction and under-covers: LightGBM 90% coverage was 0.863 with the bug and 0.901 after the fix. The engine stores `value_raw` next to `value`.
 - **LightGBM** needs the OpenMP runtime: `brew install libomp` on macOS; `libgomp1` on Ubuntu (in the bootstrap script).
 - **RQ1 placebo:** see `docs/results/rq1_placebo.md`. The pre-registered rule fires at 1 of 5 old-market placebo dates.
+
+### V-14 — Live job and neural tier notes (2026-10-17)
+- **LightGBM + PyTorch in one process segfault on macOS** (two OpenMP runtimes: Homebrew libomp and torch's bundled copy). Model libraries are now imported only when a model is built (`backtest/runner.py::_build`), so a process loads one or the other.
+- **Live job on the server:** a full `gridcast live --refresh` takes ~7 min with peak RSS 573 MB (1 GB VM plus swap); the forecast for 2026-10-19 matched a local dry run within $0.4/MWh at the median. The warm-up computes forecasts for the 56 days before each issue so rolling CQR has out-of-sample calibration history. Those past-day forecasts are cached and never reported (ADR-011).
+- **Untuned N-HiTS** (300 steps) was badly overconfident on validation (CRPS 6.09, 90% coverage 0.40), so the neural tier gets a small validation-only search with CQR (`scripts/research/neural_validation.py`).
 
 ### Deferred `[VERIFY]` items (checked in the milestone that needs them)
 
