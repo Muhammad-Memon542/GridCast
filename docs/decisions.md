@@ -156,6 +156,14 @@ Checked 2026-10-15 by the executor. "Verified" means read in a primary source (a
 - Coverage probe: every variable is complete from 2024-03 (`wind_speed_100m` is missing on 2024-02-01). Full fetch 2024-03-01 → 2026-10-19: 8 points × 23,112 hours, no nulls.
 - Consequence: the availability rule in ADR-003. Bronze chunks newer than 3 days are marked incomplete and re-fetched.
 
+### V-11 — Findings from the first silver build (2026-10-17)
+- **A new version is not always a correction.** Day-ahead OZP 2026-09-24 `_v1`, `_v2` and `_v3` are identical apart from `CreatedAt`. `make dq` counts versions that actually changed values.
+- **The in-progress real-time hour** lists all 12 intervals, with empty values for those not yet published. Silver drops the empty ones.
+- **Real-time `<AveragePrice>`** in each hourly file equals the plain mean of its 12 intervals (2026-10-01 HE1: 30.39). `rt_ozp_hourly.lmp_mean` uses the same definition.
+- **Grid Status day-ahead prices match IESO's own files exactly**, including the EST timestamp convention (checked 2026-09-24 latest version and 2026-10-15, all 24 hours).
+- **IESO's Demand file has no HE1 for 2025-05-01** (go-live day), the 23 rows noted in V-08.
+- **Availability of IESO files** = max(`CreatedAt`, listing time + 1 min), because `CreatedAt` precedes publication by 1–2 minutes (V-03). This is slightly more conservative than plan §7.3.
+
 ### Deferred `[VERIFY]` items (checked in the milestone that needs them)
 
 | Item | Plan ref | When |

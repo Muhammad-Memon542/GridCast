@@ -69,8 +69,11 @@ data-sync:  ## Mirror the server's IESO bronze + manifest into local data/ (for 
 	rm -f data/bronze/_manifest.sqlite-wal data/bronze/_manifest.sqlite-shm
 	mv data/bronze/_manifest.sqlite.tmp data/bronze/_manifest.sqlite
 
+data:  ## (M1) Rebuild all silver tables from bronze
+	$(UV_RUN) gridcast silver
+
 # Targets below arrive with later milestones; they fail loudly until then.
-data dq:  ## (M1) Silver tables / data-quality report
+dq:  ## (M1-T9) Data-quality report
 	@echo "make $@: not implemented yet (milestone M1)"; exit 1
 backtest results:  ## (M3) Rolling-origin backtest / results tables
 	@echo "make $@: not implemented yet (milestone M3)"; exit 1

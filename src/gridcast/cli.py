@@ -44,6 +44,7 @@ def _parser() -> argparse.ArgumentParser:
     gs.add_argument("--max-quota", type=float, default=0.7, help="max fraction of monthly rows")
 
     sub.add_parser("weather", help="fetch Open-Meteo previous-run forecasts into bronze (M1-T6)")
+    sub.add_parser("silver", help="rebuild all silver tables from bronze (M1-T4)")
     return parser
 
 
@@ -108,7 +109,21 @@ def _weather(args: argparse.Namespace, settings: Settings) -> int:
     return 1 if summary.errors else 0
 
 
-COMMANDS = {"collect": _collect, "gaps": _gaps, "gs-pull": _gs_pull, "weather": _weather}
+def _silver(args: argparse.Namespace, settings: Settings) -> int:
+    from gridcast.silver import build_all
+
+    for name, rows in build_all(settings.data_dir).items():
+        print(f"{name:>15}: {rows:>9,} rows")
+    return 0
+
+
+COMMANDS = {
+    "collect": _collect,
+    "gaps": _gaps,
+    "gs-pull": _gs_pull,
+    "weather": _weather,
+    "silver": _silver,
+}
 
 
 def main(argv: Sequence[str] | None = None) -> int:

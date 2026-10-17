@@ -1,0 +1,22 @@
+# When each value became knowable (plan §7.3, M1-T8). Features may only use rows with
+# available_at_utc <= issue time. IESO files with a CreatedAt stamp use
+#   available_at = max(CreatedAt, server listing time + listing_margin_minutes)
+# (the listing time is truncated to the minute). Rules below cover data without its own
+# publication stamp.
+
+listing_margin_minutes: 1
+
+# Grid Status day-ahead history: MM 4.2 requires DAM results (or a failure declaration)
+# by 15:30 EPT on D-1 (V-01); observed publication is ~13:33 EPT (V-06).
+# Limitation: Grid Status keeps only the final, corrected value; IESO corrections are
+# rare (3 of ~90 delivery days in the on-site window, V-05) and are vintaged only from
+# the start of live collection.
+da_ozp_gridstatus: {local_time: "15:30", days_after: -1}
+
+# Grid Status real-time 5-minute history: one hour after the interval ends.
+rt_ozp_gridstatus: {minutes_after_end: 60}
+
+# IESO Demand and HOEP yearly CSVs are regenerated daily (~07:30 EST, with data up to
+# HE1 of the current day, V-05f): day d is complete by 08:00 EST on d+1.
+demand_ieso: {est_time: "08:00", days_after: 1}
+hoep_ieso: {est_time: "08:00", days_after: 1}
