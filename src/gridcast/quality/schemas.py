@@ -160,6 +160,46 @@ WEATHER_FCST = pa.DataFrameSchema(
     name="weather_fcst",
 )
 
+
+def forecast_schema(name: str, value_columns: list[str]) -> pa.DataFrameSchema:
+    """Vintaged hourly operator forecasts flattened from nested IESO reports."""
+    return pa.DataFrameSchema(
+        {
+            "issued_at_utc": _ts(),
+            "target_ts_utc": _ts(),
+            **DELIVERY,
+            **{c: pa.Column("float64", nullable=True) for c in value_columns},
+            "version": VERSION,
+            "source": SOURCE,
+            "available_at_utc": _ts(),
+            "source_sha256": SHA,
+        },
+        strict=True,
+        unique=["target_ts_utc", "issued_at_utc", "version"],
+        name=name,
+    )
+
+
+def _flat_schemas() -> list[pa.DataFrameSchema]:
+    from gridcast.parse.ieso_flatten import ADEQUACY_SERIES, DA_TOTALS_SERIES, VG_SERIES
+
+    return [
+        forecast_schema("adequacy_fcst", list(ADEQUACY_SERIES)),
+        forecast_schema("vg_fcst", list(VG_SERIES)),
+        forecast_schema("da_totals", list(DA_TOTALS_SERIES)),
+    ]
+
+
 SCHEMAS = {
-    s.name: s for s in (DA_OZP, PREDISP_OZP, RT_OZP_5MIN, RT_OZP_HOURLY, DEMAND, HOEP, WEATHER_FCST)
+    s.name: s
+    for s in (
+        DA_OZP,
+        PREDISP_OZP,
+        RT_OZP_5MIN,
+        RT_OZP_HOURLY,
+        DEMAND,
+        HOEP,
+        WEATHER_FCST,
+        *_flat_schemas(),
+    )
 }

@@ -28,6 +28,7 @@ from gridcast.features.availability import (
 )
 from gridcast.ingest.weather import WeatherConfig, load_weather_config
 from gridcast.parse.ieso_csv import parse_demand, parse_hoep
+from gridcast.parse.ieso_flatten import ADEQUACY_SERIES, DA_TOTALS_SERIES, VG_SERIES, wide_series
 from gridcast.parse.ieso_xml import parse_da_ozp, parse_predisp_ozp, parse_rt_ozp
 from gridcast.quality.schemas import SCHEMAS, WEATHER_VARS
 from gridcast.timeutil.ieso import TS_DTYPE, he_to_ts_utc, ts_to_delivery
@@ -42,6 +43,16 @@ TS_COLUMN = {
     "demand": "ts_utc",
     "hoep": "ts_utc",
     "weather_fcst": "valid_ts_utc",
+    "adequacy_fcst": "target_ts_utc",
+    "vg_fcst": "target_ts_utc",
+    "da_totals": "target_ts_utc",
+}
+
+# silver table -> (IESO report, curated series)
+FLAT_REPORTS = {
+    "adequacy_fcst": ("Adequacy3", ADEQUACY_SERIES),
+    "vg_fcst": ("VGForecastSummary", VG_SERIES),
+    "da_totals": ("DATotals", DA_TOTALS_SERIES),
 }
 
 
@@ -255,6 +266,30 @@ def build_hoep(data_dir: Path, avail: AvailabilityConfig) -> pd.DataFrame:
     return _yearly_csv(data_dir, "PriceHOEPPredispOR", parse_hoep, avail.hoep_ieso, "hoep")
 
 
+def build_flat_forecast(data_dir: Path, avail: AvailabilityConfig, name: str) -> pd.DataFrame:
+    """Vintaged operator forecasts (Adequacy3, VG, DATotals): one row per vintage-hour."""
+    report, mapping = FLAT_REPORTS[name]
+    parts = []
+    for row in manifest_files(data_dir, report).itertuples(index=False):
+        wide, created = wide_series(read_bronze(data_dir, str(row.path)), mapping)
+        wide["doc_created_at"] = created
+        wide["listing"] = row.listing
+        wide["version"] = row.version
+        wide["source_sha256"] = row.sha256
+        parts.append(wide)
+    if not parts:
+        return _finish([], name)
+    frame = pd.concat(parts, ignore_index=True)
+    frame["hour_ending"] = frame["hour_ending"].astype("int8")
+    frame["target_ts_utc"] = he_to_ts_utc(frame["delivery_date"], frame["hour_ending"])
+    frame["issued_at_utc"] = ieso_file_available(
+        frame["doc_created_at"], frame["listing"], avail.listing_margin_minutes
+    )
+    frame["available_at_utc"] = frame["issued_at_utc"]
+    frame["source"] = "ieso"
+    return _finish([frame], name)
+
+
 def build_weather(data_dir: Path, config: WeatherConfig) -> pd.DataFrame:
     path = data_dir / "bronze" / "_weather.sqlite"
     if not path.exists():
@@ -357,6 +392,8 @@ def build_all(data_dir: Path) -> dict[str, int]:
         "weather_fcst": build_weather(data_dir, load_weather_config()),
     }
     tables["rt_ozp_hourly"] = build_rt_ozp_hourly(tables["rt_ozp_5min"])
+    for name in FLAT_REPORTS:
+        tables[name] = build_flat_forecast(data_dir, avail, name)
     counts = {name: write_table(frame, data_dir, name) for name, frame in tables.items()}
     log.info("silver_built", **counts)
     return counts

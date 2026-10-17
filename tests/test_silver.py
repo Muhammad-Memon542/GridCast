@@ -65,6 +65,27 @@ IESO_FILES = [
     ),
     ("Demand", "PUB_Demand_2025_excerpt.csv", "2025", 396, "2026-01-31T12:31:00+00:00"),
     (
+        "Adequacy3",
+        "PUB_Adequacy3_20261016_v99.xml",
+        "20261016",
+        99,
+        "2026-10-16T21:00:00+00:00",
+    ),
+    (
+        "VGForecastSummary",
+        "PUB_VGForecastSummary_20261016_v9.xml",
+        "20261016",
+        9,
+        "2026-10-16T21:00:00+00:00",
+    ),
+    (
+        "DATotals",
+        "PUB_DATotals_20261016_v1.xml",
+        "20261016",
+        1,
+        "2026-10-16T21:00:00+00:00",
+    ),
+    (
         "PriceHOEPPredispOR",
         "PUB_PriceHOEPPredispOR_2025_excerpt.csv",
         "2025",
@@ -213,6 +234,7 @@ def test_build_all_writes_partitioned_tables(data_dir: Path) -> None:
     assert counts["demand"] == 47
     assert counts["hoep"] == 24
     assert counts["predisp_ozp"] == 24
+    assert (counts["adequacy_fcst"], counts["da_totals"], counts["vg_fcst"]) == (24, 24, 48)
     parts = sorted(p.parent.name for p in (data_dir / "silver" / "da_ozp").rglob("*.parquet"))
     assert parts == ["month=2025-11", "month=2026-09", "month=2026-10"]
     back = pd.read_parquet(data_dir / "silver" / "demand")
