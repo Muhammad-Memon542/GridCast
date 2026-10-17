@@ -45,6 +45,8 @@ def _parser() -> argparse.ArgumentParser:
 
     sub.add_parser("weather", help="fetch Open-Meteo previous-run forecasts into bronze (M1-T6)")
     sub.add_parser("silver", help="rebuild all silver tables from bronze (M1-T4)")
+    dq = sub.add_parser("dq", help="write the data-quality report (M1-T9)")
+    dq.add_argument("--out", type=Path, default=Path("docs/results/dq_report.md"))
     return parser
 
 
@@ -117,7 +119,15 @@ def _silver(args: argparse.Namespace, settings: Settings) -> int:
     return 0
 
 
+def _dq(args: argparse.Namespace, settings: Settings) -> int:
+    from gridcast.quality.dq import write_report
+
+    print(write_report(settings.data_dir, args.out))
+    return 0
+
+
 COMMANDS = {
+    "dq": _dq,
     "collect": _collect,
     "gaps": _gaps,
     "gs-pull": _gs_pull,

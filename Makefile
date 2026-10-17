@@ -72,9 +72,10 @@ data-sync:  ## Mirror the server's IESO bronze + manifest into local data/ (for 
 data:  ## (M1) Rebuild all silver tables from bronze
 	$(UV_RUN) gridcast silver
 
+dq:  ## (M1-T9) Data-quality report -> docs/results/dq_report.md
+	$(UV_RUN) gridcast dq
+
 # Targets below arrive with later milestones; they fail loudly until then.
-dq:  ## (M1-T9) Data-quality report
-	@echo "make $@: not implemented yet (milestone M1)"; exit 1
 backtest results:  ## (M3) Rolling-origin backtest / results tables
 	@echo "make $@: not implemented yet (milestone M3)"; exit 1
 figures:  ## (M2) Regenerate paper figures
