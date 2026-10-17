@@ -1,0 +1,33 @@
+# Frozen sarimax config (ADR-011). Do not edit; once committed it can unseal the test.
+model: sarimax
+params:
+  order:
+  - 1
+  - 0
+  - 1
+  seasonal_order:
+  - 1
+  - 0
+  - 1
+  exogenous:
+  - wx_temperature_2m
+  - demand_lag2
+  maxiter: 50
+calibrate_cqr: false
+params_source: configs/models (fixed, not tuned)
+validation_scores:
+  n: 2952.0
+  crps: 4.52982
+  mae: 12.121887
+  rmse: 19.684434
+  rmae: 0.519974
+  coverage_80: 0.797087
+  coverage_90: 0.895664
+  width_80: 38.18796
+  width_90: 62.187488
+  spike_mae: 49.945008
+  spike_precision: 0.694268
+  spike_recall: 0.579787
+frozen_at_utc: '2026-10-17T21:46:46+00:00'
+code_git_sha: 503ec53
+data_snapshot_id: 44fb96f0e9844be4
