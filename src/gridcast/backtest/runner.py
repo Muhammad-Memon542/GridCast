@@ -72,6 +72,12 @@ def model_registry(
     except ImportError:  # pragma: no cover
         pass
     try:
+        from gridcast.models.sarimax import SARIMAX24
+
+        registry["sarimax"] = lambda: SARIMAX24(**params.get("sarimax", {}))
+    except ImportError:  # pragma: no cover
+        pass
+    try:
         from gridcast.models.lgbm import LGBMQuantile
 
         registry["lgbm"] = lambda: LGBMQuantile(**params.get("lgbm", {}))

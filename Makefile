@@ -10,7 +10,7 @@ SSH := ssh -i $(HOME)/.ssh/gridcast_deploy $(GRIDCAST_SERVER)
 .PHONY: help setup check lint format typecheck test hooks \
         collect gaps collector-install collector-uninstall \
         server-bootstrap server-status server-gaps data-sync \
-        data dq backtest results figures paper serve
+        data dq validation backtest results figures paper serve
 
 help:  ## Show this help
 	@grep -E '^[a-z][a-z -]*:.*## ' $(firstword $(MAKEFILE_LIST)) | awk -F':.*## ' '{printf "  %-20s %s\n", $$1, $$2}'
@@ -74,6 +74,9 @@ data:  ## (M1) Rebuild all silver tables from bronze
 
 dq:  ## (M1-T9) Data-quality report -> docs/results/dq_report.md
 	$(UV_RUN) gridcast dq
+
+validation:  ## (M3) Compare frozen models on the validation window -> docs/results/validation.md
+	$(UV_RUN) gridcast validation
 
 # Targets below arrive with later milestones; they fail loudly until then.
 backtest results:  ## (M3) Rolling-origin backtest / results tables

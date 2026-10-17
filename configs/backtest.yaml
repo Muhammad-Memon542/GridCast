@@ -16,4 +16,5 @@ models:                            # refit cadence per model
   naive_d1: {refit_every_days: 1}
   naive_d7: {refit_every_days: 1}
   lear: {refit_every_days: 1}
+  sarimax: {refit_every_days: 1}
   lgbm: {refit_every_days: 7}

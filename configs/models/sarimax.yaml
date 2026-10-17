@@ -1,0 +1,6 @@
+# SARIMAX per hour (pre-registration §4, tier 1), not tuned: a parsimonious
+# (1,0,1)x(1,0,1)_7 with a constant on asinh-normalised daily series of each hour.
+order: [1, 0, 1]
+seasonal_order: [1, 0, 1]
+exogenous: [wx_temperature_2m, demand_lag2]
+maxiter: 50

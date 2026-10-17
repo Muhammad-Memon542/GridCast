@@ -1,0 +1,21 @@
+# Frozen naive_d1 config (ADR-011). Do not edit; once committed it can unseal the test.
+model: naive_d1
+params: {}
+calibrate_cqr: false
+params_source: configs/models (fixed, not tuned)
+validation_scores:
+  n: 2952.0
+  crps: 5.146072
+  mae: 13.174893
+  rmse: 23.145405
+  rmae: 0.565143
+  coverage_80: 0.789634
+  coverage_90: 0.889228
+  width_80: 40.965326
+  width_90: 70.631511
+  spike_mae: 42.279161
+  spike_precision: 0.574359
+  spike_recall: 0.595745
+frozen_at_utc: '2026-10-17T21:36:58+00:00'
+code_git_sha: adfb7b5
+data_snapshot_id: 44fb96f0e9844be4

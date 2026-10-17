@@ -1,0 +1,37 @@
+# Frozen lear config (ADR-011). Do not edit; once committed it can unseal the test.
+model: lear
+params:
+  calibration_windows_days:
+  - 56
+  - 84
+  - 182
+  - 364
+  price_lags_days:
+  - 1
+  - 2
+  - 3
+  - 7
+  exogenous:
+  - wx_temperature_2m
+  - wx_wind_speed_100m
+  - wx_shortwave_radiation
+  - demand_lag2
+  - rt_lag2
+calibrate_cqr: false
+params_source: configs/models (fixed, not tuned)
+validation_scores:
+  n: 2952.0
+  crps: 4.701288
+  mae: 12.495303
+  rmse: 20.762357
+  rmae: 0.535992
+  coverage_80: 0.786247
+  coverage_90: 0.901084
+  width_80: 39.073011
+  width_90: 66.241175
+  spike_mae: 58.603457
+  spike_precision: 0.767857
+  spike_recall: 0.457447
+frozen_at_utc: '2026-10-17T21:39:40+00:00'
+code_git_sha: adfb7b5
+data_snapshot_id: 44fb96f0e9844be4

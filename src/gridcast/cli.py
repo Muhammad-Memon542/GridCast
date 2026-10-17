@@ -50,6 +50,13 @@ def _parser() -> argparse.ArgumentParser:
     tune = sub.add_parser("tune", help="Optuna tuning on the validation window (M3-T6)")
     tune.add_argument("model")
     tune.add_argument("--trials", type=int, default=25)
+    fz = sub.add_parser(
+        "freeze", help="validate a model config and write configs/frozen/<model>.yaml"
+    )
+    fz.add_argument("model")
+    fz.add_argument("--from-study", action="store_true", help="use the best Optuna trial's params")
+    fz.add_argument("--calibrate", action="store_true", help="apply rolling CQR (M3-T8)")
+    sub.add_parser("validation", help="compare all frozen models on the validation window")
     rq1 = sub.add_parser("rq1", help="RQ1 break tests (placebo now; the real run after G1)")
     rq1.add_argument("--after-g1", action="store_true", help="read post-go-live prices (ADR-011)")
     dq = sub.add_parser("dq", help="write the data-quality report (M1-T9)")
@@ -145,6 +152,41 @@ def _tune(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no co
     return 0
 
 
+def _freeze(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - long run
+    from gridcast.backtest.freeze import freeze
+
+    params = None
+    source = "configs/models (fixed, not tuned)"
+    if args.from_study:
+        import optuna
+
+        db = settings.data_dir / "gold" / "tuning" / f"{args.model}.db"
+        study = optuna.load_study(study_name=args.model, storage=f"sqlite:///{db}")
+        params = dict(study.best_params)
+        done = len([t for t in study.trials if t.state.is_finished()])
+        source = (
+            f"optuna study '{args.model}': best of {done} trials,"
+            f" validation CRPS {study.best_value:.4f}"
+        )
+    print(
+        freeze(
+            args.model,
+            params=params,
+            calibrate=args.calibrate,
+            source=source,
+            data_dir=settings.data_dir,
+        )
+    )
+    return 0
+
+
+def _validation(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - long run
+    from gridcast.backtest.validation_report import build
+
+    print(build(settings.data_dir))
+    return 0
+
+
 def _rq1(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - data run
     from gridcast.config import load_project_config
     from gridcast.evaluate.rq1 import run, write
@@ -170,6 +212,8 @@ COMMANDS = {
     "tune": _tune,
     "dq": _dq,
     "rq1": _rq1,
+    "freeze": _freeze,
+    "validation": _validation,
     "collect": _collect,
     "gaps": _gaps,
     "gs-pull": _gs_pull,

@@ -1,0 +1,57 @@
+[
+ {
+  "placebo": "2020-05-01",
+  "chow_mean": true,
+  "chow_log_sd": false,
+  "break_within_30_days": false,
+  "ks": true,
+  "tail_cis_disjoint": false,
+  "supported": false,
+  "mean_before": 12.8,
+  "mean_after": 14.9
+ },
+ {
+  "placebo": "2021-05-01",
+  "chow_mean": true,
+  "chow_log_sd": true,
+  "break_within_30_days": false,
+  "ks": true,
+  "tail_cis_disjoint": false,
+  "supported": false,
+  "mean_before": 14.9,
+  "mean_after": 32.8
+ },
+ {
+  "placebo": "2022-05-01",
+  "chow_mean": true,
+  "chow_log_sd": true,
+  "break_within_30_days": true,
+  "ks": true,
+  "tail_cis_disjoint": true,
+  "supported": true,
+  "mean_before": 32.8,
+  "mean_after": 41.2
+ },
+ {
+  "placebo": "2023-05-01",
+  "chow_mean": true,
+  "chow_log_sd": true,
+  "break_within_30_days": false,
+  "ks": true,
+  "tail_cis_disjoint": true,
+  "supported": false,
+  "mean_before": 41.2,
+  "mean_after": 30.7
+ },
+ {
+  "placebo": "2024-05-01",
+  "chow_mean": true,
+  "chow_log_sd": true,
+  "break_within_30_days": false,
+  "ks": true,
+  "tail_cis_disjoint": false,
+  "supported": false,
+  "mean_before": 30.7,
+  "mean_after": 40.5
+ }
+]
