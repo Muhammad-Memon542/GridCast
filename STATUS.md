@@ -1,6 +1,6 @@
 # Status — week 1 (2026-10-17)
 
-Milestone: **M1 nearly complete**, G1 pending the 7-day collector streak (~2026-10-23) | Overall: **Green** (fast track)
+Milestone: **M1 nearly complete** (G1 pending the 7-day collector streak, ~2026-10-23); **M2/M3 machinery under the test seal** (ADR-011) | Overall: **Green** (fast track)
 
 **Done this session**
 - [M1-T1] Availability audit: `docs/data_availability.md`
@@ -12,13 +12,20 @@ Milestone: **M1 nearly complete**, G1 pending the 7-day collector streak (~2026-
 - [M1-T9] `make dq` report plus triage (V-12)
 - Collector moved to the Azure VM (ADR-002); `make data-sync` mirrors server bronze locally
 
+**Done since (M2/M3 under the seal, ADR-011)**
+- [M3-T1] Rolling-origin backtester (resumable, deterministic, per-model refit cadence); [M3-T2] metrics; [M3-T3] DM/GW/Holm/MCS
+- [M3-T4..T6] naive d-1/d-7, LEAR, SARIMAX, LightGBM (Optuna, 25 trials on validation only); [M3-T8] rolling CQR
+- Frozen configs for all five in `configs/frozen/`; `docs/results/validation.md`: on validation, LightGBM+CQR is best (CRPS 3.82 vs SARIMAX 4.53, LEAR 4.70, naive d-1 5.15; DM p < 1e-7) and alone in the 90% MCS; 90% coverage 0.898
+- [M2-T2/T3] RQ1 break tests; placebo check, then owner-approved placebo-calibrated verdict (ADR-012)
+
 **Next**
 - Let the collector streak reach 7 gap-free days; then finalise `docs/gates/G1.md`
 - 2026-11-01: pull pre-dispatch vintages from Grid Status (~333k rows) for O3
-- After G1 approval: M2 (RQ1 regime analysis) and M3 (backtester, baselines) in parallel
+- After G1 approval: unseal and run the frozen models on the test window (RQ2); `gridcast rq1 --after-g1`; G2 assessment
+- M3-T7 deep nets (N-HiTS, TFT, PatchTST, DNN) and M3-T10 early live publishing
 
 **Blocked / needs owner**
-- Decide whether M2/M3 may start before G1 formally passes (fast track); the plan says wait
+- G1 approval (~2026-10-23)
 
 **Risks changed**
 - R1 (post-redesign history): **resolved** for prices; operator-forecast history is live-only

@@ -15,6 +15,11 @@ from gridcast.models.base import to_wide
 EST = "Etc/GMT+5"
 
 
+def _p(value: float) -> str:
+    """p-values below double precision print as an upper bound, not 0."""
+    return "<1e-15" if value < 1e-15 else f"{value:.2g}"
+
+
 def daily_losses(forecasts: pd.DataFrame, truth: pd.Series) -> pd.DataFrame:
     """Per IESO day: mean hourly CRPS and the L1 norm (sum) of the 24 median errors."""
     wide = to_wide(forecasts.rename(columns={"target_ts_utc": "ts_utc"}))
@@ -69,7 +74,7 @@ def comparison_markdown(
             "| --- | --- | --- | --- | --- |",
         ]
         for (a, b), r, p_adj in zip(pairs, results, adjusted, strict=True):
-            lines.append(f"| `{a}` | `{b}` | {r.statistic:.2f} | {r.p_value:.2g} | {p_adj:.2g} |")
+            lines.append(f"| `{a}` | `{b}` | {r.statistic:.2f} | {_p(r.p_value)} | {_p(p_adj)} |")
         lines.append("")
     if len(names) >= 2:
         table = pd.DataFrame({n: losses[n].loc[common, "crps"] for n in names})

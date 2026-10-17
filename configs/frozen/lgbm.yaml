@@ -1,0 +1,28 @@
+# Frozen lgbm config (ADR-011). Do not edit; once committed it can unseal the test.
+model: lgbm
+params:
+  n_estimators: 600
+  learning_rate: 0.11343753154288551
+  num_leaves: 5
+  min_child_samples: 48
+  colsample_bytree: 0.8014021288540271
+  subsample: 0.5637109776543728
+  reg_lambda: 0.30243598770630953
+calibrate_cqr: true
+params_source: 'optuna study ''lgbm'': best of 25 trials, validation CRPS 3.8646'
+validation_scores:
+  n: 2952.0
+  crps: 3.818655
+  mae: 10.643178
+  rmse: 18.783316
+  rmae: 0.456544
+  coverage_80: 0.801152
+  coverage_90: 0.898374
+  width_80: 30.838555
+  width_90: 46.623876
+  spike_mae: 51.35481
+  spike_precision: 0.831858
+  spike_recall: 0.5
+frozen_at_utc: '2026-10-17T22:50:59+00:00'
+code_git_sha: 16a4316
+data_snapshot_id: 44fb96f0e9844be4
