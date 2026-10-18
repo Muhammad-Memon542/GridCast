@@ -212,12 +212,19 @@ Checked 2026-10-15 by the executor. "Verified" means read in a primary source (a
 - **Neural search bug:** with neuralforecast's `scaler_type="robust"`, flat price stretches (near-zero IQR) blew normalised outputs up, and inverting the asinh transform turned them into absurd prices (validation CRPS in the hundreds of thousands). Fix: the search uses `scaler_type="identity"` (prices are already asinh-normalised); network outputs are bounded to the training range ± 1 before the inverse transform. The bad runs are kept, not deleted, in `data/gold/tuning/neural_validation_scaler_bug.jsonl`.
 - **All models:** the engine clips every quantile to the settlement bounds [−100, 2000] $/MWh (V-04), since DA OZP cannot settle outside them. On validation this changed only the naive baselines (their residual-based lower quantiles dipped below −100 in 11 and 874 cases). Both were re-frozen. LEAR, SARIMAX and LightGBM never left the bounds, so their frozen results are unchanged. The bounds are part of each run's config hash.
 
+### V-16 — IESO terms of use for reproducing report data → **Verified** (2026-10-17)
+- Source: https://www.ieso.ca/en/Terms-of-Use (last updated 2022-07-25).
+- Finding: IESO grants "a limited, non-exclusive, non-sublicensable, non-transferrable licence to use and reproduce the Content", provided every reproduction includes: *"Copyright © 2004-2022 Independent Electricity System Operator, all rights reserved. This information is subject to the Terms of Use set out in the IESO's website (www.ieso.ca)"*. Other uses need written permission, and supplemental terms that come with specific content prevail.
+- Consequences:
+  1. The project site and scorecard may show IESO-sourced actuals and derived charts, with that notice.
+  2. The open dataset (M7-T2) may redistribute IESO-collected files with the notice and a pointer to IESO's terms, but **cannot relicense them** (e.g. as CC-BY): the licence is non-sublicensable. Our code, forecasts and derived results carry our own licence.
+  3. Grid Status data stays excluded (ADR-001).
+
 ### Deferred `[VERIFY]` items (checked in the milestone that needs them)
 
 | Item | Plan ref | When |
 | --- | --- | --- |
 | Grid Status dataset IDs, free-tier limits, terms and redistribution | §5.2 | M1-T1 audit (feeds ADR-001) |
-| IESO terms of use for redistributing report data | M7-T2 | M1-T1 audit, because it shapes what the bronze store may later publish |
 | Open-Meteo Single Runs publication latency; Previous Runs coverage per model | §5.3 | M1-T6 / ADR-003 |
 | Chronos-2 `predict_df` signature and fine-tuning API | §5.4 | M4-T1 |
 | Moirai 2.0 / TiRex package names, APIs, licences | §5.4 | M4-T1 |

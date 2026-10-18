@@ -21,7 +21,7 @@ Status: **idea saved, nothing built or deployed.** The owner asked to be consult
 
 ## Constraints
 - Grid Status terms: no raw historical price series from the Grid Status period; attribution with link and logo. Actual-price charts use our own IESO collection (July 2026 onward); older periods only as aggregates.
-- IESO terms of use: `[VERIFY]` before launch.
+- IESO terms of use (V-16, verified): reproduction is allowed with IESO's copyright notice on every page that shows IESO-derived data; no relicensing.
 - Test-window results appear only after G1 (ADR-011 seal).
 - A link from muhammadmemon.ca to the subdomain is a separate change, needing approval.
 
