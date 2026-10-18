@@ -10,7 +10,7 @@ Validation window 2025-07-01 to 2025-10-31, inside the pre-registered validation
 | `sarimax` | 4.530 | 12.12 | 19.68 | 0.520 | 0.797 | 0.896 | 62.2 | 49.9 | 0.69/0.58 |
 | `lear` | 4.701 | 12.50 | 20.76 | 0.536 | 0.786 | 0.901 | 66.2 | 58.6 | 0.77/0.46 |
 | `naive_d1` | 5.146 | 13.17 | 23.15 | 0.565 | 0.790 | 0.889 | 70.6 | 42.3 | 0.57/0.60 |
-| `naive_d7` | 9.172 | 23.35 | 39.59 | 1.002 | 0.776 | 0.904 | 136.7 | 83.6 | 0.17/0.19 |
+| `naive_d7` | 9.171 | 23.35 | 39.59 | 1.002 | 0.776 | 0.904 | 136.7 | 83.6 | 0.17/0.19 |
 
 Significance on 123 common days (daily losses).
 
@@ -24,9 +24,9 @@ Significance on 123 common days (daily losses).
 | `lgbm+cqr` | `naive_d7` | -8.73 | <1e-15 | <1e-15 |
 | `sarimax` | `lear` | -1.26 | 0.21 | 0.33 |
 | `sarimax` | `naive_d1` | -1.82 | 0.068 | 0.2 |
-| `sarimax` | `naive_d7` | -7.70 | 1.4e-14 | 1.2e-13 |
+| `sarimax` | `naive_d7` | -7.70 | 1.4e-14 | 1.3e-13 |
 | `lear` | `naive_d1` | -1.39 | 0.16 | 0.33 |
-| `lear` | `naive_d7` | -7.36 | 1.8e-13 | 1.4e-12 |
+| `lear` | `naive_d7` | -7.36 | 1.8e-13 | 1.5e-12 |
 | `naive_d1` | `naive_d7` | -5.80 | 6.7e-09 | 4e-08 |
 
 ### Diebold-Mariano, MAE (daily L1 norm)

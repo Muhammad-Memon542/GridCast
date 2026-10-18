@@ -5,17 +5,17 @@ calibrate_cqr: false
 params_source: configs/models (fixed, not tuned)
 validation_scores:
   n: 2952.0
-  crps: 9.172315
+  crps: 9.171017
   mae: 23.348149
   rmse: 39.592806
   rmae: 1.001529
   coverage_80: 0.775745
   coverage_90: 0.904133
   width_80: 81.1828
-  width_90: 136.741749
+  width_90: 136.740905
   spike_mae: 83.626677
   spike_precision: 0.167442
   spike_recall: 0.191489
-frozen_at_utc: '2026-10-17T21:37:02+00:00'
-code_git_sha: adfb7b5
+frozen_at_utc: '2026-10-18T01:02:13+00:00'
+code_git_sha: afbab44
 data_snapshot_id: 44fb96f0e9844be4
