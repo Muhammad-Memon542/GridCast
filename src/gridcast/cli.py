@@ -68,6 +68,7 @@ def _parser() -> argparse.ArgumentParser:
     live.add_argument(
         "--log-dir", type=Path, help="forecast log checkout (default data/forecast_log)"
     )
+    sub.add_parser("site-data", help="build site/data/site.json from results files")
     sc = sub.add_parser("scorecard", help="score published forecasts against actual prices")
     sc.add_argument("--log-dir", type=Path)
     sc.add_argument("--publish", action="store_true")
@@ -247,6 +248,13 @@ def _scorecard(args: argparse.Namespace, settings: Settings) -> int:  # pragma: 
     return 0
 
 
+def _site_data(args: argparse.Namespace, settings: Settings) -> int:
+    from gridcast.pipelines.site_data import build
+
+    print(build())
+    return 0
+
+
 def _rq1(args: argparse.Namespace, settings: Settings) -> int:  # pragma: no cover - data run
     from gridcast.config import load_project_config
     from gridcast.evaluate.rq1 import run, write
@@ -284,6 +292,7 @@ COMMANDS = {
     "validation": _validation,
     "live": _live,
     "scorecard": _scorecard,
+    "site-data": _site_data,
     "collect": _collect,
     "gaps": _gaps,
     "gs-pull": _gs_pull,

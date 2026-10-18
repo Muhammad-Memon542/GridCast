@@ -55,6 +55,34 @@ def score_days(forecasts: pd.DataFrame, truth: pd.Series) -> pd.DataFrame:
     return pd.DataFrame(out, columns=["target_day", "crps", "mae", "coverage_80", "coverage_90"])
 
 
+def recent_hours(forecasts: pd.DataFrame, truth: pd.Series, days: int = 14) -> list[dict[str, Any]]:
+    """Hourly forecast band and actual for the last ``days`` published target days (for charts).
+
+    Actuals come from DA OZP as known now; after live collection starts they are IESO data.
+    """
+    if forecasts.empty:
+        return []
+    keep = sorted(forecasts["target_day"].unique())[-days:]
+    part = forecasts[forecasts["target_day"].isin(keep)]
+    wide = part.pivot_table(index="ts_utc", columns="quantile", values="value", aggfunc="first")
+    wide = wide.sort_index()
+    stamps = pd.DatetimeIndex(wide.index)
+    actual = stamps.to_series().map(truth)
+    rows = []
+    for i, ts in enumerate(stamps):
+        value = actual.iloc[i]
+        rows.append(
+            {
+                "ts_utc": ts.isoformat(),
+                "q05": round(float(wide[0.05].iloc[i]), 2),
+                "q50": round(float(wide[0.5].iloc[i]), 2),
+                "q95": round(float(wide[0.95].iloc[i]), 2),
+                "actual": None if pd.isna(value) else round(float(value), 2),
+            }
+        )
+    return rows
+
+
 def summary(days: pd.DataFrame, published: int, now: datetime) -> dict[str, Any]:
     def window(n: int | None) -> dict[str, float | int]:
         part = days if n is None else days.tail(n)
@@ -92,6 +120,12 @@ def write_scorecard(log_dir: Path, truth: pd.Series, now: datetime | None = None
         else score_days(forecasts.iloc[0:0], truth)
     )
     result = summary(days, published, now or datetime.now(UTC))
+    result["recent_hours"] = recent_hours(forecasts, truth)
+    result["notice"] = (
+        "Actual prices: Copyright © 2004-2022 Independent Electricity System Operator, all rights"
+        " reserved. This information is subject to the Terms of Use set out in the IESO's website"
+        " (www.ieso.ca)."
+    )
     (log_dir / "scorecard.json").write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
     lines = [
         "# GridCast live scorecard",

@@ -17,7 +17,7 @@ from gridcast.pipelines.live import (
     default_target_day,
     write_log_entry,
 )
-from gridcast.pipelines.scorecard import load_log, score_days, write_scorecard
+from gridcast.pipelines.scorecard import load_log, recent_hours, score_days, write_scorecard
 from gridcast.timeutil.ieso import he_to_ts_utc
 
 DAY = date(2026, 11, 2)  # issued 2026-11-01 09:00 EST, the first day after DST ends
@@ -85,6 +85,19 @@ def test_scorecard(tmp_path: Path) -> None:
     assert (result["published_days"], result["scored_days"]) == (2, 1)
     assert result["since_start"]["mae"] == pytest.approx(5.0)
     assert "| Since start | 1 |" in (tmp_path / "scorecard.md").read_text()
+    hours = result["recent_hours"]
+    assert len(hours) == 48  # both published days, in time order
+    assert hours[0] == {
+        "ts_utc": ts.iloc[0].isoformat(),
+        "q05": 32.0,
+        "q50": 50.0,
+        "q95": 68.0,
+        "actual": 55.0,
+    }
+    assert hours[-1]["actual"] is None  # not yet published by IESO
+    assert "Independent Electricity System Operator" in result["notice"]
+    assert len(recent_hours(log, truth, days=1)) == 24
     (tmp_path / "none").mkdir()
     empty = write_scorecard(tmp_path / "none", truth)
     assert empty["published_days"] == 0
+    assert empty["recent_hours"] == []
