@@ -34,3 +34,6 @@ mlartifacts/
 .DS_Store
 .idea/
 .vscode/
+
+# project site: local preview data only (never committed or deployed)
+site/preview-log/

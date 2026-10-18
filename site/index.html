@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GridCast · Ontario power price forecasts</title>
+<meta name="description" content="Daily probabilistic forecasts of Ontario's day-ahead electricity prices, scored in public.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@700;800&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script type="module" src="assets/app.js"></script>
+</head>
+<body data-page="forecast">
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./">GridCast</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="./" aria-current="page">Forecast</a>
+      <a href="research.html" >Research</a>
+      <a href="methods.html" >Data &amp; methods</a>
+    </nav>
+    <div class="top-links">
+      <a href="https://github.com/Muhammad-Memon542/GridCast">Code</a>
+      <a href="https://muhammadmemon.ca">muhammadmemon.ca</a>
+      <button class="theme-toggle" type="button">Theme: system</button>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+<section class="hero">
+  <h1>Tomorrow's Ontario power prices, with honest uncertainty</h1>
+  <p>Every morning at 9:00 Toronto time, before the day-ahead market's 10:00 bid deadline, GridCast publishes a probabilistic forecast of the next day's 24 hourly day-ahead Ontario Zonal Prices, then scores itself against the actual prices.</p>
+  <span class="preview-flag" id="preview-flag" hidden>Private preview: sample data, not published</span>
+</section>
+
+<section class="card" aria-labelledby="fc-title">
+  <h2 id="fc-title">Forecast for <span id="fc-day">–</span></h2>
+  <p class="sub">Day-ahead Ontario Zonal Price, $/MWh. Issued <span id="fc-issued">–</span> Toronto time · <a id="fc-record" href="#">verifiable record</a></p>
+  <div id="forecast-body">
+    <div class="tiles">
+      <div class="tile"><div class="label">Average of hourly medians</div><div class="value hero-figure" id="fc-avg">–</div><div class="note">per MWh</div></div>
+      <div class="tile"><div class="label">Most expensive hour (median)</div><div class="value" id="fc-peak">–</div><div class="note" id="fc-peak-note"></div></div>
+      <div class="tile"><div class="label">Cheapest hour (median)</div><div class="value" id="fc-low">–</div><div class="note" id="fc-low-note"></div></div>
+    </div>
+    <div class="chart" id="fc-chart" data-title="Tomorrow's hourly price forecast with 50%, 90% and 98% ranges"></div>
+    <ul class="legend" aria-label="Legend">
+      <li><span class="key-line" style="background:var(--median)"></span>Median forecast</li>
+      <li><span class="key-rect" style="background:var(--band-50)"></span>50% range</li>
+      <li><span class="key-rect" style="background:var(--band-90)"></span>90% range</li>
+      <li><span class="key-rect" style="background:var(--band-98)"></span>98% range</li>
+    </ul>
+    <details class="table-view"><summary>View as table</summary><div class="table-scroll" id="fc-table"></div></details>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="tr-title">
+  <h2 id="tr-title">Track record</h2>
+  <p class="sub">Published forecasts scored against actual day-ahead prices. Last 30 days unless fewer exist.</p>
+  <div class="tiles">
+    <div class="tile"><div class="label">Forecasts published</div><div class="value" id="tr-published">–</div></div>
+    <div class="tile"><div class="label">CRPS (lower is better)</div><div class="value" id="tr-crps">–</div></div>
+    <div class="tile"><div class="label">Average error of the median</div><div class="value" id="tr-mae">–</div></div>
+    <div class="tile"><div class="label">Hours inside the 90% range</div><div class="value" id="tr-cov">–</div><div class="note">target: 90%</div></div>
+  </div>
+  <div id="track-body"></div>
+  <ul class="legend" id="tr-legend" hidden aria-label="Legend">
+    <li><span class="key-line" style="background:var(--actual)"></span>Actual price</li>
+    <li><span class="key-line" style="background:var(--median)"></span>Median forecast</li>
+    <li><span class="key-rect" style="background:var(--band-90)"></span>90% range</li>
+  </ul>
+  <p class="sub" id="tr-notice"></p>
+</section>
+
+<section class="card prose" aria-labelledby="how-title">
+  <h2 id="how-title">How it works</h2>
+  <ol>
+    <li><strong>Collect.</strong> A server snapshots IESO's public market reports every hour and keeps every version, because most disappear after 30–90 days.</li>
+    <li><strong>Forecast at 9:00.</strong> Features use only information published before 9:00 the day before, enforced by automated leakage tests.</li>
+    <li><strong>Publish before 10:00.</strong> Each forecast is committed to a public, append-only log; it can't be edited afterwards.</li>
+    <li><strong>Score.</strong> Once IESO publishes the actual prices, the forecast is scored, good days and bad.</li>
+  </ol>
+  <p>The model comparison and the research questions behind this are on the <a href="research.html">Research</a> page.</p>
+</section>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p><strong>A research project, not trading or financial advice.</strong> Forecasts are published as-is for transparency; no bids are placed.</p>
+    <p>Actual prices and other IESO data: Copyright © 2004-2022 Independent Electricity System Operator, all rights reserved. This information is subject to the Terms of Use set out in the IESO's website (<a href="https://www.ieso.ca">www.ieso.ca</a>).</p>
+    <p>Price history before mid-July 2026: data provided by <a href="https://www.gridstatus.io/">Grid Status</a>. Weather forecasts: <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0).</p>
+    <p>Built by <a href="https://muhammadmemon.ca">Muhammad Memon</a> · <a href="https://github.com/Muhammad-Memon542/GridCast">source code</a>.</p>
+  </div>
+</footer>
+</body>
+</html>

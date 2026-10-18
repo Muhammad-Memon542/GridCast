@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data & methods · GridCast</title>
+<meta name="description" content="How GridCast collects data, prevents look-ahead leakage and where its limits are.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@700;800&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script type="module" src="assets/app.js"></script>
+</head>
+<body data-page="methods">
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./">GridCast</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="./" >Forecast</a>
+      <a href="research.html" >Research</a>
+      <a href="methods.html" aria-current="page">Data &amp; methods</a>
+    </nav>
+    <div class="top-links">
+      <a href="https://github.com/Muhammad-Memon542/GridCast">Code</a>
+      <a href="https://muhammadmemon.ca">muhammadmemon.ca</a>
+      <button class="theme-toggle" type="button">Theme: system</button>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+<section class="hero">
+  <h1>Data &amp; methods</h1>
+  <p>How the data flows, how look-ahead leakage is prevented, and what the limitations are.</p>
+</section>
+
+<section class="card" aria-labelledby="flow-title">
+  <h2 id="flow-title">Pipeline</h2>
+  <div class="chart">
+    <svg viewBox="0 0 960 190" role="img" aria-labelledby="flow-desc">
+      <title id="flow-desc">Data flows from IESO reports, the price-history backfill and weather forecasts into raw storage, validated tables, point-in-time features, frozen models, a public forecast log and this site.</title>
+      <g font-size="13">
+        <g fill="var(--surface)" stroke="var(--axis)">
+          <rect x="4" y="14" width="150" height="44" rx="8"/><rect x="4" y="72" width="150" height="44" rx="8"/><rect x="4" y="130" width="150" height="44" rx="8"/>
+          <rect x="196" y="72" width="120" height="44" rx="8"/><rect x="352" y="72" width="128" height="44" rx="8"/>
+          <rect x="516" y="72" width="128" height="44" rx="8"/><rect x="680" y="72" width="120" height="44" rx="8"/><rect x="836" y="72" width="120" height="44" rx="8"/>
+        </g>
+        <g fill="var(--ink)" text-anchor="middle">
+          <text x="79" y="34">IESO reports</text><text x="79" y="50" fill="var(--muted)">hourly, every version</text>
+          <text x="79" y="92">Price backfill</text><text x="79" y="108" fill="var(--muted)">Grid Status, 2025–26</text>
+          <text x="79" y="150">Weather</text><text x="79" y="166" fill="var(--muted)">Open-Meteo past runs</text>
+          <text x="256" y="92">Raw files</text><text x="256" y="108" fill="var(--muted)">kept unchanged</text>
+          <text x="416" y="92">12 tables</text><text x="416" y="108" fill="var(--muted)">typed, validated</text>
+          <text x="580" y="92">Features</text><text x="580" y="108" fill="var(--muted)">as of 9:00, D−1</text>
+          <text x="740" y="92">Frozen model</text><text x="740" y="108" fill="var(--muted)">+ calibration</text>
+          <text x="896" y="92">Public log</text><text x="896" y="108" fill="var(--muted)">→ this site</text>
+        </g>
+        <g stroke="var(--ink-2)" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+          <path d="M154 36 C176 36 176 94 194 94"/><path d="M154 94 H194"/><path d="M154 152 C176 152 176 94 194 94"/>
+          <path d="M316 94 H350"/><path d="M480 94 H514"/><path d="M644 94 H678"/><path d="M800 94 H834"/>
+        </g>
+        <defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--ink-2)"/></marker></defs>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<section class="card prose" aria-labelledby="leak-title">
+  <h2 id="leak-title">No peeking at the future</h2>
+  <ul>
+    <li>Every value carries the time it became public. A forecast issued at 9:00 can only use rows published by 9:00, the single gate all inputs pass through.</li>
+    <li>IESO timestamps are interpreted on its own clock (Eastern Standard Time all year), verified against the server's file times.</li>
+    <li>Weather forecasts count only from 8 hours after their model run, so a forecast can never use weather information it wouldn't have had.</li>
+    <li>Automated tests, run on every code change: a randomised check against brute-force lookups, a "canary" value published one second late that must never appear, the weather rule, and identical results on re-runs.</li>
+    <li>Test-period results are sealed in code until model settings are frozen and committed.</li>
+  </ul>
+</section>
+
+<section class="card prose" aria-labelledby="lim-title">
+  <h2 id="lim-title">Limitations</h2>
+  <ul>
+    <li>The old market's price (HOEP) and the new zonal price are different quantities; comparisons across the redesign use the closest comparable series.</li>
+    <li>Operator forecasts (demand, wind, solar outlooks) only exist from the start of live collection, so most model training relies on weather and lagged data.</li>
+    <li>Battery results assume a price-taker that doesn't move prices, which is unrealistic for very large batteries.</li>
+    <li>About one year of post-redesign test data limits statistical power; the live scorecard extends it over time.</li>
+  </ul>
+</section>
+
+<section class="card prose" aria-labelledby="src-title">
+  <h2 id="src-title">Sources &amp; attribution</h2>
+  <ul>
+    <li><strong>IESO public reports</strong>: prices, demand, generation, interties, operator forecasts. Copyright © 2004-2022 Independent Electricity System Operator, all rights reserved. This information is subject to the Terms of Use set out in the IESO's website (<a href="https://www.ieso.ca">www.ieso.ca</a>).</li>
+    <li><strong>Grid Status</strong>: day-ahead price history from May 2025 to mid-July 2026, where IESO's own public archive begins (used for training only; not republished here). Data provided by <a href="https://www.gridstatus.io/">Grid Status</a>.</li>
+    <li><strong>Open-Meteo</strong>: GFS weather forecasts as issued (Previous Runs API), CC BY 4.0.</li>
+  </ul>
+</section>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p><strong>A research project, not trading or financial advice.</strong> Forecasts are published as-is for transparency; no bids are placed.</p>
+    <p>Actual prices and other IESO data: Copyright © 2004-2022 Independent Electricity System Operator, all rights reserved. This information is subject to the Terms of Use set out in the IESO's website (<a href="https://www.ieso.ca">www.ieso.ca</a>).</p>
+    <p>Price history before mid-July 2026: data provided by <a href="https://www.gridstatus.io/">Grid Status</a>. Weather forecasts: <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0).</p>
+    <p>Built by <a href="https://muhammadmemon.ca">Muhammad Memon</a> · <a href="https://github.com/Muhammad-Memon542/GridCast">source code</a>.</p>
+  </div>
+</footer>
+</body>
+</html>

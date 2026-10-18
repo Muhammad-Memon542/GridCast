@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research · GridCast</title>
+<meta name="description" content="Pre-registered research on forecasting Ontario's redesigned electricity market.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@700;800&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<script type="module" src="assets/app.js"></script>
+</head>
+<body data-page="research">
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./">GridCast</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="./" >Forecast</a>
+      <a href="research.html" aria-current="page">Research</a>
+      <a href="methods.html" >Data &amp; methods</a>
+    </nav>
+    <div class="top-links">
+      <a href="https://github.com/Muhammad-Memon542/GridCast">Code</a>
+      <a href="https://muhammadmemon.ca">muhammadmemon.ca</a>
+      <button class="theme-toggle" type="button">Theme: system</button>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+<section class="hero">
+  <h1>The research</h1>
+  <p>Ontario redesigned its electricity market on 1 May 2025. GridCast tests how forecasting and battery strategies cope with the new market, with every question, split and success criterion registered before any model saw test data.</p>
+</section>
+
+<section class="card" aria-labelledby="pr-title">
+  <h2 id="pr-title">Pre-registration</h2>
+  <p class="sub">Registered <span id="pr-date">–</span>, before any model touched data. Later changes are dated amendments inside the document.</p>
+  <p>Commit <span class="mono" id="pr-commit">–</span> · SHA-256 <span class="mono" id="pr-sha">–</span></p>
+  <p><a id="pr-link" href="#">Read the pre-registration</a></p>
+</section>
+
+<section class="card" aria-labelledby="rq-title">
+  <h2 id="rq-title">Research questions</h2>
+  <ul class="badges">
+    <li><span class="rq">RQ1</span><span><strong>Did the redesign change how prices behave?</strong><br><span class="state" id="status-rq1"></span></span></li>
+    <li><span class="rq">RQ2</span><span><strong>Do zero-shot AI forecasting models match tuned specialists?</strong><br><span class="state" id="status-rq2"></span></span></li>
+    <li><span class="rq">RQ3</span><span><strong>After a redesign, which approach recovers fastest?</strong><br><span class="state" id="status-rq3"></span></span></li>
+    <li><span class="rq">RQ4</span><span><strong>Does better uncertainty make a battery more money?</strong><br><span class="state" id="status-rq4"></span></span></li>
+  </ul>
+</section>
+
+<section class="card" aria-labelledby="val-title">
+  <h2 id="val-title">Model comparison (validation, July–October 2025)</h2>
+  <p class="sub">CRPS scores the whole forecast distribution; lower is better. These are validation results used to choose and freeze each model. Test-year results are released after the data gate, so nothing could be tuned to them.</p>
+  <div class="chart" id="val-chart" data-title="Validation CRPS by model"></div>
+  <details class="table-view" open><summary>All metrics</summary><div class="table-scroll" id="val-table"></div></details>
+</section>
+
+<section class="card" aria-labelledby="pl-title">
+  <h2 id="pl-title">How unusual is a "break"? A placebo check</h2>
+  <p class="sub">Year-to-year price swings alone make standard break tests fire. To calibrate RQ1, the same four statistics were computed at 48 dates in the old market when nothing changed. The redesign counts as a break only if it beats about 95% of these placebo dates on both level and volatility. Its own values appear here once the data gate is passed.</p>
+  <div class="small-multiples" id="placebo-grid"></div>
+  <details class="table-view"><summary>View as table</summary><div class="table-scroll" id="placebo-table"></div></details>
+</section>
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <p><strong>A research project, not trading or financial advice.</strong> Forecasts are published as-is for transparency; no bids are placed.</p>
+    <p>Actual prices and other IESO data: Copyright © 2004-2022 Independent Electricity System Operator, all rights reserved. This information is subject to the Terms of Use set out in the IESO's website (<a href="https://www.ieso.ca">www.ieso.ca</a>).</p>
+    <p>Price history before mid-July 2026: data provided by <a href="https://www.gridstatus.io/">Grid Status</a>. Weather forecasts: <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0).</p>
+    <p>Built by <a href="https://muhammadmemon.ca">Muhammad Memon</a> · <a href="https://github.com/Muhammad-Memon542/GridCast">source code</a>.</p>
+  </div>
+</footer>
+</body>
+</html>
