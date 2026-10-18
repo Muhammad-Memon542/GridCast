@@ -130,14 +130,19 @@ function renderTrackRecord(sc) {
   text("tr-crps", w.crps.toFixed(2));
   text("tr-mae", fmtPrice(w.mae));
   text("tr-cov", `${(w.coverage_90 * 100).toFixed(0)}%`);
-  const points = sc.recent_hours.map((h) => ({ ts: h.ts_utc, median: h.q50, actual: h.actual, bands: { b90: [h.q05, h.q95] } }));
+  text("tr-notice", sc.notice || "");
+  const hours = sc.recent_hours || []; // absent from scorecards written by older server code
+  if (!hours.length) {
+    body.replaceChildren();
+    return;
+  }
+  const points = hours.map((h) => ({ ts: h.ts_utc, median: h.q50, actual: h.actual, bands: { b90: [h.q05, h.q95] } }));
   const chart = document.createElement("div");
   chart.className = "chart";
   chart.dataset.title = "Forecast vs actual day-ahead price, recent days";
   body.replaceChildren(chart);
   bandChart(chart, { points, bands: [{ key: "b90", label: "90% range", color: css("--band-90") }], dayDividers: true });
   document.getElementById("tr-legend").hidden = false;
-  text("tr-notice", sc.notice || "");
 }
 
 // ------------------------------------------------------------------ research page

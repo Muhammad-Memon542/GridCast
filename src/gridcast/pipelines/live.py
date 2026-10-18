@@ -204,7 +204,7 @@ def write_log_entry(entry: LiveForecast, log_dir: Path, *, now: datetime, data_d
         "code_git_sha": git_sha(),
         "frozen_config_git_sha": entry.frozen_config_sha,
         "data_snapshot_id": snapshot_id(data_dir, FEATURE_TABLES),
-        "attribution": "Price history before live collection: data provided by Grid Status "
+        "attribution": "Price history before mid-July 2026: data provided by Grid Status "
         "(https://www.gridstatus.io/).",
     }
     path.parent.mkdir(parents=True, exist_ok=True)

@@ -72,6 +72,8 @@
 }
 
 * { box-sizing: border-box; }
+/* the hidden attribute must win over component display rules (.legend, .preview-flag, ...) */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
