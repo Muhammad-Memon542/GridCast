@@ -58,5 +58,11 @@ sudo install -m 644 scripts/server/systemd/gridcast-live.timer /etc/systemd/syst
 sudo systemctl daemon-reload
 sudo systemctl enable --now gridcast-live.timer >/dev/null
 
+echo "== afternoon scorecard (systemd timer, 14:20 America/Toronto)"
+sudo install -m 644 scripts/server/systemd/gridcast-scorecard.service /etc/systemd/system/
+sudo install -m 644 scripts/server/systemd/gridcast-scorecard.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now gridcast-scorecard.timer >/dev/null
+
 echo "== done"
 systemctl list-timers 'gridcast-*' --no-pager | head -4

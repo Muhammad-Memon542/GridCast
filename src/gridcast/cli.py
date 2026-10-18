@@ -72,6 +72,11 @@ def _parser() -> argparse.ArgumentParser:
     sc = sub.add_parser("scorecard", help="score published forecasts against actual prices")
     sc.add_argument("--log-dir", type=Path)
     sc.add_argument("--publish", action="store_true")
+    sc.add_argument(
+        "--refresh",
+        action="store_true",
+        help="rebuild the day-ahead price table from the collector's files first",
+    )
     rq1 = sub.add_parser("rq1", help="RQ1 break tests (placebo now; the real run after G1)")
     rq1.add_argument("--after-g1", action="store_true", help="read post-go-live prices (ADR-011)")
     dq = sub.add_parser("dq", help="write the data-quality report (M1-T9)")
@@ -238,6 +243,10 @@ def _scorecard(args: argparse.Namespace, settings: Settings) -> int:  # pragma: 
     from gridcast.pipelines.scorecard import write_scorecard
 
     log_dir = args.log_dir or settings.data_dir / "forecast_log"
+    if args.refresh:
+        from gridcast.silver import build_all
+
+        build_all(settings.data_dir, only=["da_ozp"])
     da = pd.read_parquet(settings.data_dir / "silver" / "da_ozp").drop(
         columns=["month"], errors="ignore"
     )

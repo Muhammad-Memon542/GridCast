@@ -1,0 +1,9 @@
+[Unit]
+Description=Score the latest forecast at 14:20 Toronto time, after IESO publishes day-ahead results (~13:30) and the 14:07 collector run
+
+[Timer]
+OnCalendar=*-*-* 14:20:00 America/Toronto
+Persistent=true
+
+[Install]
+WantedBy=timers.target

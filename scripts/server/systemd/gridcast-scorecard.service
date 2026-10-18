@@ -1,0 +1,12 @@
+[Unit]
+Description=GridCast afternoon scorecard (scores tomorrow's forecast once the day-ahead market clears)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=gridcast
+WorkingDirectory=/home/gridcast/gridcast
+EnvironmentFile=-/home/gridcast/gridcast/.env.live
+ExecStart=/home/gridcast/gridcast/.venv/bin/gridcast scorecard --refresh $GRIDCAST_LIVE_FLAGS
+TimeoutStartSec=15min
