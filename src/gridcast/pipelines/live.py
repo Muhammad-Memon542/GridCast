@@ -164,6 +164,7 @@ def forecast(target_day: date, *, data_dir: Path, warmup_days: int = 56) -> Live
         out_dir=out_dir,
         run_meta=meta,
         calibrator=calibrator,
+        bounds=(project.market.price_floor, project.market.price_cap),
     )
     day = result.forecasts[
         pd.to_datetime(result.forecasts["issued_at_utc"], utc=True) == pd.Timestamp(issue)

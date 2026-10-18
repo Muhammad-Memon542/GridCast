@@ -19,6 +19,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from gridcast.config import load_project_config
 from gridcast.models.base import QUANTILES, to_long
 from gridcast.models.lear import _Normaliser
 
@@ -61,6 +62,9 @@ class NeuralQuantile:
         self._y_norm: _Normaliser | None = None
         self._x_norm: _Normaliser | None = None
         self._history: pd.DataFrame | None = None
+        self._z_range = (-np.inf, np.inf)
+        market = load_project_config().market
+        self._price_bounds = (market.price_floor, market.price_cap)
 
     # ------------------------------------------------------------------ data
     def _frame(self, features: pd.DataFrame, y: pd.Series | None) -> pd.DataFrame:
@@ -105,6 +109,7 @@ class NeuralQuantile:
         self._y_norm = _Normaliser.fit(target.to_numpy(dtype="float64")[:, None])
         self._x_norm = _Normaliser.fit(features[list(EXOGENOUS)].astype("float64").to_numpy())
         frame = self._frame(features, target)
+        self._z_range = (float(frame["y"].min()), float(frame["y"].max()))
         logging.getLogger("pytorch_lightning").setLevel(logging.ERROR)
         logging.getLogger("lightning.pytorch").setLevel(logging.ERROR)
         with warnings.catch_warnings():
@@ -137,5 +142,10 @@ class NeuralQuantile:
         out = out.sort_values("ds")
         name = type(self._nf.models[0]).__name__
         z = np.column_stack([out[_column(name, q)].to_numpy(dtype="float64") for q in quantiles])
-        values = self._y_norm.inverse(z.reshape(-1, 1)).reshape(z.shape)
+        # sinh() turns an out-of-range network output into an absurd price, so outputs are
+        # bounded to the training range (plus a margin) and prices to the settlement bounds.
+        z = np.clip(np.nan_to_num(z, nan=0.0), self._z_range[0] - 1.0, self._z_range[1] + 1.0)
+        values = np.clip(
+            self._y_norm.inverse(z.reshape(-1, 1)).reshape(z.shape), *self._price_bounds
+        )
         return to_long(rows["ts_utc"].reset_index(drop=True), values, quantiles)

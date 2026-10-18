@@ -19,12 +19,12 @@ from gridcast.config import Settings
 from gridcast.ingest.power import on_ac_power
 
 SEARCH: list[tuple[str, dict[str, Any]]] = [
-    ("nhits_s0", {"max_steps": 1000, "learning_rate": 1e-3, "scaler_type": "robust"}),
+    ("nhits_s0", {"max_steps": 1000, "learning_rate": 1e-3, "scaler_type": "identity"}),
     (
         "nhits_s0",
-        {"max_steps": 1000, "learning_rate": 1e-3, "scaler_type": "robust", "input_size": 336},
+        {"max_steps": 1000, "learning_rate": 1e-3, "scaler_type": "identity", "input_size": 336},
     ),
-    ("nhits_s0", {"max_steps": 2000, "learning_rate": 5e-4, "scaler_type": "robust"}),
+    ("nhits_s0", {"max_steps": 2000, "learning_rate": 5e-4, "scaler_type": "identity"}),
     (
         "patchtst_s0",
         {
@@ -32,10 +32,10 @@ SEARCH: list[tuple[str, dict[str, Any]]] = [
             "hidden_size": 64,
             "n_heads": 4,
             "encoder_layers": 2,
-            "scaler_type": "robust",
+            "scaler_type": "identity",
         },
     ),
-    ("tft_s0", {"max_steps": 500, "hidden_size": 32, "scaler_type": "robust"}),
+    ("tft_s0", {"max_steps": 500, "hidden_size": 32, "scaler_type": "identity"}),
 ]
 
 

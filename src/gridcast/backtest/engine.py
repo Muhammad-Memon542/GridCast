@@ -89,6 +89,7 @@ def run_backtest(
     out_dir: Path | None = None,
     run_meta: dict[str, object] | None = None,
     calibrator: RollingCQR | None = None,
+    bounds: tuple[float, float] | None = None,
 ) -> BacktestResult:
     days = sorted(d for d in features[DAY].unique() if config.eval_start <= d <= config.eval_end)
     for day in days:
@@ -138,6 +139,9 @@ def run_backtest(
             past = pd.concat(history, ignore_index=True)
             past = past.assign(value=past["value_raw"])
             long = calibrator.adjust(long, past, targets_known_at(da_ozp, issue), issue, quantiles)
+        if bounds is not None:
+            # DA OZP settles inside [floor, cap] (V-04): outside quantiles are impossible.
+            long = long.assign(value=long["value"].clip(*bounds))
         _check_forecast(long, rows, quantiles)
         record = _record(long, issue, meta, model.name)
         record["value_raw"] = (

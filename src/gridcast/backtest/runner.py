@@ -186,6 +186,7 @@ def run_validation(
     run_payload: dict[str, object] = {
         "model": model_name,
         "calibrated": calibrate,
+        "bounds": [project.market.price_floor, project.market.price_cap],
         "params": (params or {}).get(model_name, {}),
         "backtest": bt.__dict__,
     }
@@ -211,6 +212,7 @@ def run_validation(
         calibrator=RollingCQR(window_days=cfg.residual_days, min_days=cfg.min_residual_days)
         if calibrate
         else None,
+        bounds=(project.market.price_floor, project.market.price_cap),
     )
     return result, evaluate(result, features, da_ozp, validation_spike_threshold(da_ozp, cfg))
 
@@ -249,6 +251,7 @@ def run_test(
         "model": model_name,
         "params": params,
         "calibrated": calibrate,
+        "bounds": [project.market.price_floor, project.market.price_cap],
         "window": "test",
         "backtest": bt.__dict__,
     }
@@ -273,5 +276,6 @@ def run_test(
         calibrator=RollingCQR(window_days=cfg.residual_days, min_days=cfg.min_residual_days)
         if calibrate
         else None,
+        bounds=(project.market.price_floor, project.market.price_cap),
     )
     return result, evaluate(result, features, da_ozp, validation_spike_threshold(da_ozp, cfg))

@@ -208,6 +208,10 @@ Checked 2026-10-15 by the executor. "Verified" means read in a primary source (a
 - **Live job on the server:** a full `gridcast live --refresh` takes ~7 min with peak RSS 573 MB (1 GB VM plus swap); the forecast for 2026-10-19 matched a local dry run within $0.4/MWh at the median. The warm-up computes forecasts for the 56 days before each issue so rolling CQR has out-of-sample calibration history. Those past-day forecasts are cached and never reported (ADR-011).
 - **Untuned N-HiTS** (300 steps) was badly overconfident on validation (CRPS 6.09, 90% coverage 0.40), so the neural tier gets a small validation-only search with CQR (`scripts/research/neural_validation.py`).
 
+### V-15 — Forecasts are clipped to the settlement bounds; neural output guard (2026-10-17)
+- **Neural search bug:** with neuralforecast's `scaler_type="robust"`, flat price stretches (near-zero IQR) blew normalised outputs up, and inverting the asinh transform turned them into absurd prices (validation CRPS in the hundreds of thousands). Fix: the search uses `scaler_type="identity"` (prices are already asinh-normalised); network outputs are bounded to the training range ± 1 before the inverse transform. The bad runs are kept, not deleted, in `data/gold/tuning/neural_validation_scaler_bug.jsonl`.
+- **All models:** the engine clips every quantile to the settlement bounds [−100, 2000] $/MWh (V-04), since DA OZP cannot settle outside them. On validation this changed only the naive baselines (their residual-based lower quantiles dipped below −100 in 11 and 874 cases). Both were re-frozen. LEAR, SARIMAX and LightGBM never left the bounds, so their frozen results are unchanged. The bounds are part of each run's config hash.
+
 ### Deferred `[VERIFY]` items (checked in the milestone that needs them)
 
 | Item | Plan ref | When |
