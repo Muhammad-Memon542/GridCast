@@ -27,7 +27,7 @@ Milestone: **M1 nearly complete** (G1 pending the 7-day collector streak, ~2026-
 
 **Blocked / needs owner**
 - G1 approval (~2026-10-23)
-- ADR-005: where to publish the daily forecast log (recommended: a separate public repo with the server's deploy key)
+- ADR-005 / ADR-013: owner said "yes, both" (public GridCast-forecasts repo + project site). Owner still to: create the repo and add the deploy key, confirm the address (both free; recommended gridcast.muhammadmemon.ca), approve building a preview. Saved in `docs/proposals/site.md`. **Nothing public starts without approval.**
 
 **Risks changed**
 - R1 (post-redesign history): **resolved** for prices; operator-forecast history is live-only
