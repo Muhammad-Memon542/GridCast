@@ -1,6 +1,6 @@
-# Proposal: project site at `gridcast.muhammadmemon.ca` (ADR-013, pending owner approval)
+# Proposal: project site at `gridcast.muhammadmemon.ca` (ADR-013, accepted)
 
-Status: **idea saved, nothing built or deployed.** The owner asked to be consulted before anything starts (2026-10-17). Resume from here in the next session.
+Status: **accepted and launching (ADR-013, owner approval 2026-10-17).** Worker `gridcast` on Cloudflare Workers Builds, root directory `site`.
 
 ## Owner answers so far
 - GitHub log and site: **"Yes, both"**. The public `GridCast-forecasts` repo is the tamper-proof daily record, and the site reads from it. Still to do: the owner creates the empty public repo and adds the server deploy key with write access (key in ADR-005).

@@ -1,7 +1,8 @@
 {
   // Cloudflare Workers static assets for gridcast.muhammadmemon.ca (ADR-013).
-  // NOT DEPLOYED: deploy only with the owner's approval (`npx wrangler deploy` from site/).
-  "name": "gridcast-site",
+  // Launched 2026-10-17 with the owner's approval. Cloudflare Workers Builds deploys it from
+  // this repo (Worker "gridcast", root directory "site").
+  "name": "gridcast",
   "compatibility_date": "2026-09-19",
   "assets": { "directory": "./", "not_found_handling": "404-page" },
   "routes": [{ "pattern": "gridcast.muhammadmemon.ca", "custom_domain": true }]

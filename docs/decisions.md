@@ -106,6 +106,13 @@ Two logs live here:
 - Decision: option B. Report the registered rule unchanged; the headline verdict compares go-live statistics with 48 monthly placebo dates (2020-05 → 2024-04). Full specification in `PREREGISTRATION.md` §11.
 - Consequences: `gridcast rq1` computes the placebo distribution (old market only, runnable now) and, after G1, the go-live statistics and calibrated p-values.
 
+### ADR-013 — Public project site and daily forecast log
+- Status: **Accepted** (owner, 2026-10-17: "go", after reviewing a private preview)
+- Context: `docs/proposals/site.md`. The plan's M6 dashboard (Streamlit) needs a host and adds nothing a static page can't show; the owner wanted a page under their own domain.
+- Decision: a static site in `site/` at `gridcast.muhammadmemon.ca`, on Cloudflare Workers static assets. The owner created the Worker `gridcast` in the dashboard; Workers Builds deploys it from this repo (root directory `site`). It replaces the Streamlit dashboard (M6-T7). The server's 09:00 job commits each forecast to the public, append-only repo `Muhammad-Memon542/GridCast-forecasts` (deploy key on the server only), and the site reads `latest.json` and `scorecard.json` from it. No Cloudflare credentials on the server.
+- Constraints kept: no raw Grid Status series is republished (ADR-001); IESO's copyright notice appears on every page and in `scorecard.json` (V-16); test-window research results appear only after G1 (ADR-011); a link from muhammadmemon.ca goes live only after this site is up.
+- Consequences: from 2026-10-18 the live forecasts are public, timestamped and can't be quietly edited, so they double as an out-of-sample record of the frozen LightGBM + CQR model.
+
 ---
 
 ## Verification log
