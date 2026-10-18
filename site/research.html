@@ -30,7 +30,7 @@
 <main class="wrap">
 <section class="hero">
   <h1>The research</h1>
-  <p>Ontario redesigned its electricity market on 1 May 2025. GridCast tests how forecasting and battery strategies cope with the new market, with every question, split and success criterion registered before any model saw test data.</p>
+  <p>Ontario redesigned its electricity market on 1 May 2025. GridCast uses statistical testing and machine-learning models to study how prices, forecasting methods and battery strategies cope with the new market. Every question, data split and success criterion was registered before any model saw test data.</p>
 </section>
 
 <section class="card" aria-labelledby="pr-title">
@@ -52,14 +52,14 @@
 
 <section class="card" aria-labelledby="val-title">
   <h2 id="val-title">Model comparison (validation, July–October 2025)</h2>
-  <p class="sub">CRPS scores the whole forecast distribution; lower is better. These are validation results used to choose and freeze each model. Test-year results are released after the data gate, so nothing could be tuned to them.</p>
+  <p class="sub">Five models in a rolling-origin backtest: gradient-boosted quantile regression (LightGBM) with conformal calibration, SARIMAX (statsmodels), LASSO-regularised autoregression (LEAR, scikit-learn) and two naive baselines. CRPS scores the whole forecast distribution; lower is better. These validation results were used to tune, choose and freeze each model. Test-year results are released after the data gate, so nothing could be tuned to them.</p>
   <div class="chart" id="val-chart" data-title="Validation CRPS by model"></div>
   <details class="table-view" open><summary>All metrics</summary><div class="table-scroll" id="val-table"></div></details>
 </section>
 
 <section class="card" aria-labelledby="pl-title">
   <h2 id="pl-title">How unusual is a "break"? A placebo check</h2>
-  <p class="sub">Year-to-year price swings alone make standard break tests fire. To calibrate RQ1, the same four statistics were computed at 48 dates in the old market when nothing changed. The redesign counts as a break only if it beats about 95% of these placebo dates on both level and volatility. Its own values appear here once the data gate is passed.</p>
+  <p class="sub">Year-to-year price swings alone make standard break tests fire. To calibrate RQ1, the same four statistics (Chow F-tests on price level and volatility, a Kolmogorov–Smirnov distance and a Hill tail-index ratio) were computed at 48 dates in the old market when nothing changed. The redesign counts as a break only if it beats about 95% of these placebo dates on both level and volatility. Its own values appear here once the data gate is passed.</p>
   <div class="small-multiples" id="placebo-grid"></div>
   <details class="table-view"><summary>View as table</summary><div class="table-scroll" id="placebo-table"></div></details>
 </section>

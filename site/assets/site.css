@@ -152,6 +152,9 @@ th { color: var(--ink-2); font-weight: 400; }
 .badges li { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: baseline; }
 .badges .rq { font-weight: 700; }
 .badges .state { color: var(--ink-2); }
+.skills { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px 32px; }
+.skills h3 { margin: 0 0 4px; font-size: 16px; }
+.skills p { margin: 0; color: var(--ink-2); font-size: 15px; }
 .small-multiples { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 22px 28px; }
 .small-multiples h4 { margin: 0 0 4px; font-size: 14px; font-weight: 400; color: var(--ink-2); }
 

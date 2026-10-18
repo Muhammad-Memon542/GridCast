@@ -30,7 +30,19 @@
 <main class="wrap">
 <section class="hero">
   <h1>Data &amp; methods</h1>
-  <p>How the data flows, how look-ahead leakage is prevented, and what the limitations are.</p>
+  <p>The machine learning, statistics and data engineering behind GridCast: the tools, how the data flows, how look-ahead leakage is prevented, and what the limitations are.</p>
+</section>
+
+<section class="card" aria-labelledby="skills-title">
+  <h2 id="skills-title">Skills &amp; tools</h2>
+  <div class="skills">
+    <div><h3>Machine learning &amp; regression</h3><p>Gradient-boosted quantile regression with LightGBM; LASSO-regularised linear regression with scikit-learn (the LEAR benchmark); neural forecasters N-HiTS, PatchTST and TFT in PyTorch via neuralforecast, currently in validation.</p></div>
+    <div><h3>Statistics &amp; time series</h3><p>SARIMAX with statsmodels; Diebold–Mariano and Giacomini–White tests with Holm correction; model confidence sets with arch; Chow and Kolmogorov–Smirnov tests, Hill tail-index estimates and change-point detection (ruptures, SciPy) for the market-redesign question.</p></div>
+    <div><h3>Probabilistic prediction &amp; evaluation</h3><p>21-quantile forecasts; conformal prediction (CQR) for calibrated ranges; CRPS, pinball loss, mean absolute error and interval coverage; rolling-origin backtesting with scheduled refits; Optuna hyperparameter search on validation data only.</p></div>
+    <div><h3>Data analysis &amp; engineering</h3><p>pandas and NumPy; DuckDB SQL over Apache Parquet; schema validation with Pandera; XML and CSV parsing with lxml; rate-limited API clients for IESO, Open-Meteo and Grid Status (httpx, gridstatusio); automated data-quality reports.</p></div>
+    <div><h3>Research design</h3><p>Questions, data splits and decision rules pre-registered before modelling; a test window sealed in code; placebo-calibrated break tests; look-ahead leakage tests with pytest and Hypothesis.</p></div>
+    <div><h3>Engineering &amp; deployment</h3><p>Python 3.12 with uv, Ruff, mypy (strict) and pre-commit; GitHub Actions CI; an Azure Linux server running the hourly collector and the 9:00 forecast on systemd timers; this site in plain JavaScript with hand-built SVG charts on Cloudflare Workers.</p></div>
+  </div>
 </section>
 
 <section class="card" aria-labelledby="flow-title">
@@ -70,7 +82,7 @@
     <li>Every value carries the time it became public. A forecast issued at 9:00 can only use rows published by 9:00, the single gate all inputs pass through.</li>
     <li>IESO timestamps are interpreted on its own clock (Eastern Standard Time all year), verified against the server's file times.</li>
     <li>Weather forecasts count only from 8 hours after their model run, so a forecast can never use weather information it wouldn't have had.</li>
-    <li>Automated tests, run on every code change: a randomised check against brute-force lookups, a "canary" value published one second late that must never appear, the weather rule, and identical results on re-runs.</li>
+    <li>Automated tests (pytest, Hypothesis), run on every code change: a randomised property-based check against brute-force lookups, a "canary" value published one second late that must never appear, the weather rule, and identical results on re-runs.</li>
     <li>Test-period results are sealed in code until model settings are frozen and committed.</li>
   </ul>
 </section>

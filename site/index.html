@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GridCast · Ontario power price forecasts</title>
-<meta name="description" content="Daily probabilistic forecasts of Ontario's day-ahead electricity prices, scored in public.">
+<meta name="description" content="A machine-learning forecasting system that predicts Ontario's day-ahead electricity prices every morning, with calibrated uncertainty, and scores itself in public.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@700;800&display=swap">
@@ -30,7 +30,7 @@
 <main class="wrap">
 <section class="hero">
   <h1>Tomorrow's Ontario power prices, with honest uncertainty</h1>
-  <p>Every morning at 9:00 Toronto time, before the day-ahead market's 10:00 bid deadline, GridCast publishes a probabilistic forecast of the next day's 24 hourly day-ahead Ontario Zonal Prices, then scores itself against the actual prices.</p>
+  <p>GridCast is a machine-learning forecasting system. Every morning at 9:00 Toronto time, before the day-ahead market's 10:00 bid deadline, it predicts the next day's 24 hourly Ontario electricity prices as a full probability distribution, then scores itself against the actual prices.</p>
   <span class="preview-flag" id="preview-flag" hidden>Private preview: sample data, not published</span>
 </section>
 
@@ -75,12 +75,12 @@
 <section class="card prose" aria-labelledby="how-title">
   <h2 id="how-title">How it works</h2>
   <ol>
-    <li><strong>Collect.</strong> A server snapshots IESO's public market reports every hour and keeps every version, because most disappear after 30–90 days.</li>
-    <li><strong>Forecast at 9:00.</strong> Features use only information published before 9:00 the day before, enforced by automated leakage tests.</li>
-    <li><strong>Publish before 10:00.</strong> Each forecast is committed to a public, append-only log; it can't be edited afterwards.</li>
-    <li><strong>Score.</strong> Once IESO publishes the actual prices, the forecast is scored, good days and bad.</li>
+    <li><strong>Collect the data.</strong> A Python pipeline (httpx, lxml) on an Azure Linux server snapshots the grid operator's public market reports every hour and keeps every version, because most disappear after 30–90 days. Over 13,000 raw files so far, parsed into 12 validated tables (pandas, Pandera, Apache Parquet) and analysed with DuckDB SQL.</li>
+    <li><strong>Engineer features.</strong> Lagged prices, demand, generation by fuel, imports and exports, holidays, and weather forecasts for eight Ontario cities. Every input carries the time it became public, so the model only sees what was known at 9:00; property-based tests (pytest, Hypothesis) check this on every code change.</li>
+    <li><strong>Predict.</strong> A LightGBM gradient-boosted quantile regression model predicts 21 quantiles for every hour, with hyperparameters tuned by Optuna on validation data only. Conformalized quantile regression (CQR) then calibrates the ranges, so a 90% range holds about 90% of actual prices.</li>
+    <li><strong>Publish and score.</strong> Each forecast is committed to a public, append-only Git log before 10:00. Once the actual prices are out, it's scored with CRPS, mean absolute error and interval coverage, good days and bad.</li>
   </ol>
-  <p>The model comparison and the research questions behind this are on the <a href="research.html">Research</a> page.</p>
+  <p>In a rolling-origin backtest on held-out validation months, LightGBM beat LASSO regression (scikit-learn), SARIMAX (statsmodels) and naive baselines. The comparison and statistical tests are on the <a href="research.html">Research</a> page, and the full toolkit is on <a href="methods.html">Data &amp; methods</a>.</p>
 </section>
 </main>
 <footer class="foot">
