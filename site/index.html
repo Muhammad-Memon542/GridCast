@@ -45,11 +45,13 @@
     </div>
     <div class="chart" id="fc-chart" data-title="Tomorrow's hourly price forecast with 50%, 90% and 98% ranges"></div>
     <ul class="legend" aria-label="Legend">
-      <li><span class="key-line" style="background:var(--median)"></span>Median forecast</li>
-      <li><span class="key-rect" style="background:var(--band-50)"></span>50% range</li>
-      <li><span class="key-rect" style="background:var(--band-90)"></span>90% range</li>
-      <li><span class="key-rect" style="background:var(--band-98)"></span>98% range</li>
+      <li><span class="key-line key-median"></span>Median forecast</li>
+      <li><span class="key-rect key-b50"></span>50% range</li>
+      <li><span class="key-rect key-b90"></span>90% range</li>
+      <li><span class="key-rect key-b98"></span>98% range</li>
+      <li id="fc-actual-key" hidden><span class="key-line key-actual"></span>Actual price</li>
     </ul>
+    <p class="result" id="fc-result" hidden></p>
     <details class="table-view"><summary>View as table</summary><div class="table-scroll" id="fc-table"></div></details>
   </div>
 </section>
@@ -65,10 +67,11 @@
   </div>
   <div id="track-body"></div>
   <ul class="legend" id="tr-legend" hidden aria-label="Legend">
-    <li><span class="key-line" style="background:var(--actual)"></span>Actual price</li>
-    <li><span class="key-line" style="background:var(--median)"></span>Median forecast</li>
-    <li><span class="key-rect" style="background:var(--band-90)"></span>90% range</li>
+    <li><span class="key-line key-actual"></span>Actual price</li>
+    <li><span class="key-line key-median"></span>Median forecast</li>
+    <li><span class="key-rect key-b90"></span>90% range</li>
   </ul>
+  <details class="table-view" id="tr-days" hidden><summary>Results by day</summary><div class="table-scroll" id="tr-table"></div></details>
   <p class="sub" id="tr-notice"></p>
 </section>
 

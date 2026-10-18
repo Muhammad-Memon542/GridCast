@@ -67,22 +67,33 @@ async function forecastPage() {
     }));
     latest = null;
   }
-  if (latest) renderForecast(latest);
+  let sc = null;
   try {
-    renderTrackRecord(await getJSON(`${logBase}scorecard.json`));
-  } catch {
-    renderTrackRecord(null);
-  }
+    sc = await getJSON(`${logBase}scorecard.json`);
+  } catch { /* no scorecard yet */ }
+  if (latest) renderForecast(latest, sc);
+  renderTrackRecord(sc);
 }
 
-function renderForecast(f) {
+/** Actual prices for the forecast's hours, keyed by ts_utc, from the scorecard's hourly rows. */
+function actualsFor(f, sc) {
+  const byTs = new Map();
+  for (const h of sc?.recent_hours || []) {
+    if (h.actual !== null && h.actual !== undefined) byTs.set(new Date(h.ts_utc).getTime(), h.actual);
+  }
+  return f.hours.map((h) => byTs.get(new Date(h.ts_utc).getTime()) ?? null);
+}
+
+function renderForecast(f, sc) {
   const lv = f.quantile_levels;
   const at = (q) => lv.findIndex((v) => Math.abs(v - q) < 1e-9);
   const idx = { q01: at(0.01), q05: at(0.05), q25: at(0.25), q50: at(0.5), q75: at(0.75), q95: at(0.95), q99: at(0.99) };
-  const points = f.hours.map((h) => ({
+  const actuals = actualsFor(f, sc);
+  const points = f.hours.map((h, i) => ({
     ts: h.ts_utc,
     he: h.hour_ending,
     median: h.quantiles[idx.q50],
+    actual: actuals[i],
     bands: { b98: [h.quantiles[idx.q01], h.quantiles[idx.q99]], b90: [h.quantiles[idx.q05], h.quantiles[idx.q95]], b50: [h.quantiles[idx.q25], h.quantiles[idx.q75]] },
   }));
   const medians = points.map((p) => p.median);
@@ -108,10 +119,29 @@ function renderForecast(f) {
     { key: "b50", label: "50% range", color: css("--band-50") },
   ];
   bandChart(document.getElementById("fc-chart"), { points, bands });
-  table(document.getElementById("fc-table"), ["Hour (Toronto)", "HE (EST)", "Median", "50% range", "90% range", "98% range"],
-    points.map((p) => [torontoHour(p.ts, { minute: "2-digit" }), String(p.he), fmtPrice(p.median),
-      `${fmtPrice(p.bands.b50[0])}–${fmtPrice(p.bands.b50[1])}`, `${fmtPrice(p.bands.b90[0])}–${fmtPrice(p.bands.b90[1])}`,
-      `${fmtPrice(p.bands.b98[0])}–${fmtPrice(p.bands.b98[1])}`]));
+  const scored = points.filter((p) => p.actual !== null);
+  const headers = ["Hour (Toronto)", "HE (EST)", "Median", "50% range", "90% range", "98% range"];
+  if (scored.length) headers.push("Actual");
+  table(document.getElementById("fc-table"), headers,
+    points.map((p) => {
+      const row = [torontoHour(p.ts, { minute: "2-digit" }), String(p.he), fmtPrice(p.median),
+        `${fmtPrice(p.bands.b50[0])}–${fmtPrice(p.bands.b50[1])}`, `${fmtPrice(p.bands.b90[0])}–${fmtPrice(p.bands.b90[1])}`,
+        `${fmtPrice(p.bands.b98[0])}–${fmtPrice(p.bands.b98[1])}`];
+      if (scored.length) row.push(p.actual === null ? "–" : fmtPrice(p.actual));
+      return row;
+    }));
+  if (scored.length) {
+    // the day-ahead market has cleared: show how the forecast did against the actual prices
+    const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    const inside = scored.filter((p) => p.actual >= p.bands.b90[0] && p.actual <= p.bands.b90[1]).length;
+    const mae = mean(scored.map((p) => Math.abs(p.actual - p.median)));
+    const partial = scored.length < points.length ? ` (${scored.length} of ${points.length} hours published so far)` : "";
+    document.getElementById("fc-actual-key").hidden = false;
+    const result = document.getElementById("fc-result");
+    result.textContent = `Actual prices are in${partial}: average ${fmtPrice(mean(scored.map((p) => p.actual)))} against a forecast of ${fmtPrice(mean(scored.map((p) => p.median)))}. `
+      + `${inside} of ${scored.length} hours landed inside the 90% range, and the median was off by ${fmtPrice(mae)} per hour on average.`;
+    result.hidden = false;
+  }
 }
 
 function renderTrackRecord(sc) {
@@ -131,6 +161,13 @@ function renderTrackRecord(sc) {
   text("tr-mae", fmtPrice(w.mae));
   text("tr-cov", `${(w.coverage_90 * 100).toFixed(0)}%`);
   text("tr-notice", sc.notice || "");
+  const days = [...(sc.daily || [])].reverse().slice(0, 30);
+  if (days.length) {
+    const day = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+    table(document.getElementById("tr-table"), ["Delivery day", "CRPS", "Average error of the median", "Hours inside the 90% range"],
+      days.map((d) => [day(d.target_day), d.crps.toFixed(2), fmtPrice(d.mae), `${(d.coverage_90 * 100).toFixed(0)}%`]));
+    document.getElementById("tr-days").hidden = false;
+  }
   const hours = sc.recent_hours || []; // absent from scorecards written by older server code
   if (!hours.length) {
     body.replaceChildren();

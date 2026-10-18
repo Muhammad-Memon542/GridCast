@@ -130,6 +130,13 @@ a:hover { text-decoration-color: currentColor; }
 .legend li { display: inline-flex; align-items: center; gap: 7px; }
 .key-rect { width: 18px; height: 10px; border-radius: 2px; display: inline-block; }
 .key-line { width: 18px; height: 2px; border-radius: 1px; display: inline-block; }
+/* legend colours live here, not in style="" attributes, which the site's CSP blocks */
+.key-median { background: var(--median); }
+.key-actual { background: var(--actual); }
+.key-b50 { background: var(--band-50); }
+.key-b90 { background: var(--band-90); }
+.key-b98 { background: var(--band-98); }
+.result { margin: 12px 0 0; font-size: 15px; color: var(--ink); }
 .tooltip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; line-height: 1.45; box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.35); min-width: 150px; z-index: 5; }
 .tooltip .t-head { color: var(--ink-2); margin-bottom: 2px; }
 .tooltip .t-row { display: flex; align-items: center; gap: 8px; }
